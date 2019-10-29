@@ -10,3 +10,7 @@ target_include_directories(AbbB23Energymeter PUBLIC
 target_link_libraries(AbbB23Energymeter PUBLIC
   modbus
 )
+
+target_compile_options(AbbB23Energymeter PUBLIC
+  -Wall -Wextra
+)
