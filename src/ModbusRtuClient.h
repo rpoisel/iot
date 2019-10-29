@@ -1,6 +1,4 @@
-
 #include <stdbool.h>
-
 
 /*
  * ModbusRtuClient.h
@@ -11,6 +9,4 @@
 
 int ModbusRtuABB(bool updatecounter);
 
-
 #endif /* MYSQLWRITE_H_ */
-

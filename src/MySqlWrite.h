@@ -10,7 +10,6 @@
 #ifndef MYSQLWRITE_H_
 #define MYSQLWRITE_H_
 
-
 int SaveLiveData(struct instValues data);
 
 int SaveCounter(int counter1, int counter2);
