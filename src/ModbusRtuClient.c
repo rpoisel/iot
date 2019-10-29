@@ -14,7 +14,7 @@ extern bool silent;
 
 int ModbusRtuABB(bool updatecounter) {
 
-  uint16_t tab_reg[64];
+  uint16_t tab_reg[66];
   int rc;
   modbus_t *ctx = NULL;
 
@@ -42,7 +42,8 @@ int ModbusRtuABB(bool updatecounter) {
     return -1;
   }
 
-  rc = modbus_read_registers(ctx, 0x5B00, 66, tab_reg);
+  rc = modbus_read_registers(ctx, 0x5B00, sizeof(tab_reg) / sizeof(tab_reg[0]),
+                             tab_reg);
   if (rc == -1) {
     fprintf(stderr, "%s\n", modbus_strerror(errno));
     modbus_close(ctx);
