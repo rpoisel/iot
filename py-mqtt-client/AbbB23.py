@@ -51,8 +51,10 @@ def main():
     client = mqtt.Client()
 
     client.on_connect = on_connect
+    client.tls_set()
+    client.username_pw_set(username='abc', password='xyz')
 
-    client.connect("192.168.88.241", 1883, 60)
+    client.connect("hostname.tld", 8883, 60)
     try:
         client.loop_forever()
     except KeyboardInterrupt:
