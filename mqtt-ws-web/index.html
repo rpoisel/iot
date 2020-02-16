@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Power Consumption and Production</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <script src="//cdn.rawgit.com/Mikhus/canvas-gauges/gh-pages/download/2.1.5/linear/gauge.min.js"></script>
+    </head>
+    <body>
+        <script>
+            var ws = new WebSocket("wss://hostname.tld/power/ws/");
+            var active = new LinearGauge({
+                renderTo: document.createElement('canvas'),
+                units: 'W',
+                title: 'Obtained Power',
+                width: 400,
+                height: 800,
+                minValue: -2500, // maximum power to be fed-in
+                maxValue: 5000, // maximum power consumption of the house (excl. energy production)
+                majorTicks: [
+                    '-2500','-1750','-1000','-250', '500','1250','2000','2750','3500', '4250', '5000'
+                ],
+                highlights: [
+                    { from: -2500, to: 0, color: 'rgba(0,255,0,.15)' },
+                    { from: 0, to: 5000, color: 'rgba(255,0,225,.25)' },
+                ],
+            });
+            document.body.appendChild(active.options.renderTo);
+            active.draw();
+            var solar = new LinearGauge({
+                renderTo: document.createElement('canvas'),
+                units: 'W',
+                title: 'Solar Power',
+                width: 400,
+                height: 800,
+                minValue: -10, // maximum power consumption of inverter
+                maxValue: 2500, // maximum power production of solar power system
+                majorTicks: [
+                    '-10','241','492','743','994','1245','1496','1747','1998','2249', '2500'
+                ],
+                highlights: [
+                    { from: 0, to: 2500, color: 'rgba(0,255,0,.15)' },
+                    { from: -10, to: 0, color: 'rgba(255,0,225,.25)' },
+                ],
+            });
+            document.body.appendChild(solar.options.renderTo);
+            solar.draw();
+            ws.onmessage = function (event) {
+                var fields = event.data.split(' = ');
+                var channel = fields[0].replace('/homeautomation/power/', '');
+		var value = parseFloat(fields[1]);
+                if (channel == "active") {
+                    active.value = value;
+                    active.update({animation: true});
+		} else {
+                    solar.value = value;
+                    solar.update({animation: true});
+		}
+            };
+        </script>
+    </body>
+</html>

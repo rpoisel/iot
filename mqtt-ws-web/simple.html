@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Power Consumption and Production</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    </head>
+    <body>
+        <script>
+            var ws = new WebSocket("wss://hostname.tld/power/ws/");
+            ws.onmessage = function (event) {
+                var elementName = event.data.includes("solar") ? "solar" : "active";
+                document.getElementById(elementName).innerHTML = event.data;
+            };
+        </script>
+        <div id="active"></div>
+        <div id="solar"></div>
+    </body>
+</html>
