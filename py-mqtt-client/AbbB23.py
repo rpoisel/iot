@@ -16,22 +16,28 @@ class ValuePusher(Thread):
         Thread.__init__(self)
         self.__connection = connection
         self.__units = units
-        self.__client = ModbusSerialClient(
-            method='rtu', port='/dev/ttyUSB0',
-            baudrate=19200, parity='E', stopbits=1, bytesize=8)
-        self.__client.connect()
+        self.__client = None
 
     def run(self):
         while not quitCond:
+            if self.__client == None:
+                self.__client = ModbusSerialClient(
+                    method='rtu', port='/dev/ttyUSB0', baudrate=19200, parity='E', stopbits=1, bytesize=8)
+                self.__client.connect()
             for u in self.__units:
-                response = self.__client.read_holding_registers(
-                    address=0x5B00, count=66, unit=u)
-                activePowerTotal = ctypes.c_int32(
-                    (response.registers[20] << 16) | response.registers[21]).value / 100
-                apStr = (str(activePowerTotal) + " W")
-                print(self.__units[u] + ": " + apStr)
-                self.__connection.publish(
-                    "/homeautomation/power/" + self.__units[u], apStr)
+                try:
+                    response = self.__client.read_holding_registers(
+                        address=0x5B00, count=66, unit=u)
+                    activePowerTotal = ctypes.c_int32(
+                        (response.registers[20] << 16) | response.registers[21]).value / 100
+                    apStr = (str(activePowerTotal) + " W")
+                    print(self.__units[u] + ": " + apStr)
+                    self.__connection.publish(
+                        "/homeautomation/power/" + self.__units[u], apStr)
+                except AttributeError:
+                    self.__client.close()
+                    self.__client = None
+                    time.sleep(2)
                 time.sleep(.1)
             time.sleep(1)
 
