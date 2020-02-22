@@ -1,0 +1,14 @@
+[Unit]
+Description=modbus-mqtt
+After=syslog.target network.target
+
+[Service]
+Type=simple
+User=user
+WorkingDirectory=/home/user
+ExecStart=python3 /home/user/.local/bin/AbbB23.py
+Restart=always
+RestartSec=1s
+
+[Install]
+WantedBy=multi-user.target

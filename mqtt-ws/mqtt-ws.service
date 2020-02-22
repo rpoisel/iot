@@ -1,0 +1,14 @@
+[Unit]
+Description=mqtt-ws
+After=syslog.target network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/mqtt-ws
+ExecStart=/opt/mqtt-ws/bin/python /opt/mqtt-ws/application/main.py
+Restart=always
+RestartSec=1s
+
+[Install]
+WantedBy=multi-user.target
