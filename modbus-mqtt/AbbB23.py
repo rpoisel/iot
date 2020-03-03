@@ -30,7 +30,7 @@ class ValuePusher(Thread):
                         address=0x5B00, count=66, unit=u)
                     activePowerTotal = ctypes.c_int32(
                         (response.registers[20] << 16) | response.registers[21]).value / 100
-                    apStr = (str(activePowerTotal) + " W")
+                    apStr = str(activePowerTotal)
                     print(self.__units[u] + ": " + apStr)
                     self.__connection.publish(
                         "/homeautomation/power/" + self.__units[u], apStr)
