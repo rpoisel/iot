@@ -6,7 +6,7 @@ After=syslog.target network.target
 Type=simple
 User=user
 WorkingDirectory=/tmp
-ExecStart=/opt/modbus-mqtt/bin/python /opt/modbus-mqtt/AbbB23.py
+ExecStart=/opt/modbus-mqtt/bin/python /opt/modbus-mqtt/modbus-mqtt.py
 Restart=always
 RestartSec=1s
 

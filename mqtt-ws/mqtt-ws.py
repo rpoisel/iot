@@ -55,8 +55,9 @@ class AsyncioHelper:
 
 
 class AsyncMqttClient:
-    def __init__(self, loop):
+    def __init__(self, loop, topics):
         self.loop = loop
+        self.__topics = topics
         self.got_message = self.loop.create_future()
 
         self.client = mqtt.Client()
@@ -73,15 +74,16 @@ class AsyncMqttClient:
                                         2048)
 
     def on_connect(self, client, userdata, flags, rc):
-        client.subscribe('/homeautomation/power/active')
-        client.subscribe('/homeautomation/power/solar')
+        for topic in self.__topics:
+            client.subscribe('/homeautomation/power/' + topic)
 
     def on_message(self, client, userdata, msg):
         self.got_message.set_result(msg)
 
 
 async def mqtt_subscribe(websocket, path):
-    client = AsyncMqttClient(asyncio.get_event_loop())
+    client = AsyncMqttClient(asyncio.get_event_loop(),
+                             ['obtained', 'solar', 'total'])
     while True:
         msg = await client.got_message
         client.got_message = asyncio.get_event_loop().create_future()

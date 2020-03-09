@@ -46,7 +46,7 @@ class ValueWriter(mqtt.Client):
 def main():
     influx = InfluxDBClient(host='localhost', port=8086, database='power')
     valueWriter = ValueWriter(influx)
-    valueWriter.run(['active', 'solar'])
+    valueWriter.run(['obtained', 'solar', 'total'])
 
 
 if __name__ == "__main__":

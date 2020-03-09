@@ -6,7 +6,7 @@ After=syslog.target network.target
 Type=simple
 User=www-data
 WorkingDirectory=/opt/mqtt-ws
-ExecStart=/opt/mqtt-ws/bin/python /opt/mqtt-ws/application/main.py
+ExecStart=/opt/mqtt-ws/bin/python /opt/mqtt-ws/mqtt-ws.py
 Restart=always
 RestartSec=1s
 
