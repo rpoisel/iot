@@ -3,11 +3,10 @@
 
 from influxdb import InfluxDBClient
 import paho.mqtt.client as mqtt
+import struct
 
 
 class ValueWriter(mqtt.Client):
-    DEFAULT_PATH = '/homeautomation/power/'
-
     def __init__(self, influx):
         super().__init__()
         self.influx = influx
@@ -16,27 +15,26 @@ class ValueWriter(mqtt.Client):
         print("Connected with rc = " + str(rc))
 
     def on_message(self, client, user_data, msg):
-        source = msg.topic.replace(ValueWriter.DEFAULT_PATH, '')
+        solar = struct.unpack("<i", msg.payload[0:4])[0]
+        total = struct.unpack("<i", msg.payload[8:12])[0]
+
         dbData = [
             {
                 "measurement": "power",
-                "tags": {
-                    "source": source,
-                },
                 "fields": {
-                    "value": float(msg.payload)
+                    "solar": solar,
+                    "total": total,
                 }
             }
         ]
         self.influx.write_points(dbData)
 
-    def run(self, topics):
+    def run(self):
         self.tls_set()
         self.username_pw_set(username='abc', password='xyz')
         self.connect("hostname.tld", 8883, 60)
 
-        for topic in topics:
-            self.subscribe(ValueWriter.DEFAULT_PATH + topic, 0)
+        self.subscribe('/homeautomation/power/cumulative', 0)
         rc = 0
         while rc == 0:
             rc = self.loop()
@@ -46,7 +44,7 @@ class ValueWriter(mqtt.Client):
 def main():
     influx = InfluxDBClient(host='localhost', port=8086, database='power')
     valueWriter = ValueWriter(influx)
-    valueWriter.run(['obtained', 'solar', 'total'])
+    valueWriter.run()
 
 
 if __name__ == "__main__":

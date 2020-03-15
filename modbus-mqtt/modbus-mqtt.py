@@ -5,16 +5,16 @@ from paho.mqtt import client as mqtt
 from pymodbus.client.sync import ModbusSerialClient
 from threading import Thread
 import ctypes
+import struct
 import time
 
 quitCond = False
 valuePusher = None
 
 
-class ValuePusher(Thread):
-    def __init__(self, connection, units):
-        Thread.__init__(self)
-        self.__connection = connection
+class ValueRetriever(object):
+    def __init__(self, units):
+        super().__init__()
         self.__units = units
         self.__client = None
 
@@ -41,31 +41,48 @@ class ValuePusher(Thread):
             time.sleep(.1)
         return result
 
+    def next(self):
+        self.__maintainModbusConnection()
+        return self.__readFromModbus()
+
+    def __del__(self):
+        if self.__client is not None:
+            self.__client.close()
+
+
+class ValuePusher(Thread):
+    def __init__(self, client):
+        super().__init__()
+        self.__client = client
+        self.valueRetriever = ValueRetriever({1: 'solar', 2: 'obtained'})
+
     def __publishToMqtt(self, values):
         for v in values:
-            powerStr = str(values[v])
-            print(v + ": " + powerStr)
-            self.__connection.publish("/homeautomation/power/" + v, powerStr)
+            pubVal = values[v]
+            if v in ['solar', 'obtained', 'total']:
+                pubVal = str(values[v])
+                print(v + ": " + pubVal)
+            self.__client.publish("/homeautomation/power/" + v, pubVal)
 
     def run(self):
         while not quitCond:
-            self.__maintainModbusConnection()
-            values = self.__readFromModbus()
-
-            values['total'] = (values['solar'] if values['solar'] > 0 else 0) \
-                + values['obtained']
+            values = self.valueRetriever.next()
+            values['total'] = (values['solar'] if values['solar']
+                               > 0 else 0) + values['obtained']
+            values['cumulative'] = struct.pack('<iii',
+                                               values['solar'],
+                                               values['obtained'],
+                                               values['total'])
 
             self.__publishToMqtt(values)
-            time.sleep(1)
 
-    def __del__(self):
-        self.__client.close()
+            time.sleep(1)
 
 
 def on_connect(client, userdata, flags, rc):
     global valuePusher
     print("Connected with result code "+str(rc))
-    valuePusher = ValuePusher(client, {1: 'solar', 2: 'obtained'})
+    valuePusher = ValuePusher(client)
     valuePusher.start()
 
 

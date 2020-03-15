@@ -4,6 +4,7 @@
 import asyncio
 import paho.mqtt.client as mqtt
 import socket
+import struct
 import websockets
 
 
@@ -82,14 +83,18 @@ class AsyncMqttClient:
 
 
 async def mqtt_subscribe(websocket, path):
-    client = AsyncMqttClient(asyncio.get_event_loop(),
-                             ['obtained', 'solar', 'total'])
+    client = AsyncMqttClient(asyncio.get_event_loop(), ['cumulative'])
     while True:
         msg = await client.got_message
         client.got_message = asyncio.get_event_loop().create_future()
+        if not msg.topic == '/homeautomation/power/cumulative':
+            continue
+
+        solar = struct.unpack("<i", msg.payload[0:4])[0]
+        total = struct.unpack("<i", msg.payload[8:12])[0]
         try:
-            await websocket.send(
-                msg.topic + " = " + msg.payload.decode('UTF-8'))
+            await websocket.send("solar = " + str(solar))
+            await websocket.send("total = " + str(total))
         except websockets.exceptions.ConnectionClosedError:
             return
 
