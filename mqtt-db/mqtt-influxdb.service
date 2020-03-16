@@ -1,0 +1,14 @@
+[Unit]
+Description=mqtt-influxdb
+After=syslog.target network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/mqtt-db
+ExecStart=/opt/mqtt-db/bin/python /opt/mqtt-db/mqtt-influxdb.py
+Restart=always
+RestartSec=1s
+
+[Install]
+WantedBy=multi-user.target
