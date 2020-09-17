@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"os"
 	"os/signal"
@@ -84,5 +86,11 @@ func main() {
 		mqttClient.Publish("/homeautomation/power/solar", 0, false, text)
 		text = fmt.Sprintf("%d", totalPower)
 		mqttClient.Publish("/homeautomation/power/total", 0, false, text)
+
+		buf := new(bytes.Buffer)
+		binary.Write(buf, binary.LittleEndian, solarPower)
+		binary.Write(buf, binary.LittleEndian, obtainedPower)
+		binary.Write(buf, binary.LittleEndian, totalPower)
+		mqttClient.Publish("/homeautomation/power/cumulative", 0, false, buf.Bytes())
 	}
 }
