@@ -15,7 +15,6 @@ import (
 func setupMqtt() *MQTT.ClientOptions {
 	opts := MQTT.NewClientOptions()
 	opts.AddBroker("ssl://hostname.tld:8883")
-	opts.SetClientID("ssl-sample")
 	opts.SetUsername("user")
 	opts.SetPassword("pass")
 	return opts
