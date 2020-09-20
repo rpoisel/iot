@@ -10,13 +10,19 @@ import (
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	ABB "github.com/rpoisel/modbus-mqtt/abb"
+	CONF "github.com/rpoisel/modbus-mqtt/conf"
 )
 
 func setupMqtt() *MQTT.ClientOptions {
+	config, err := CONF.ReadConfigSection("/etc/homeautomation.json", "mqtt")
+	if err != nil {
+		panic(err)
+	}
+
 	opts := MQTT.NewClientOptions()
-	opts.AddBroker("ssl://hostname.tld:8883")
-	opts.SetUsername("user")
-	opts.SetPassword("pass")
+	opts.AddBroker(config["broker"].(string))
+	opts.SetUsername(config["username"].(string))
+	opts.SetPassword(config["password"].(string))
 	return opts
 }
 
@@ -26,9 +32,13 @@ const (
 )
 
 func main() {
+	config, err := CONF.ReadConfigSection("/etc/homeautomation.json", "modbus")
+	if err != nil {
+		panic(err)
+	}
 	powerMeters := make(map[byte]*ABB.B23)
 	for _, id := range []byte{obtainedPowerID, solarPowerID} {
-		b23Instance, err := ABB.NewB23("/dev/ttyUSB0", id)
+		b23Instance, err := ABB.NewB23(config["device"].(string), id)
 		if err != nil {
 			panic(err.Error())
 		}

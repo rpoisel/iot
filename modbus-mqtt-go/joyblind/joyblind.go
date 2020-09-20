@@ -1,16 +1,13 @@
 package main
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"os"
-
 	MQTT "github.com/eclipse/paho.mqtt.golang"
+	CONF "github.com/rpoisel/modbus-mqtt/conf"
 	JoySticks "github.com/splace/joysticks"
 )
 
 func setupMqtt() *MQTT.ClientOptions {
-	config, err := readConfigSection("/etc/homeautomation.json", "mqtt")
+	config, err := CONF.ReadConfigSection("/etc/homeautomation.json", "mqtt")
 	if err != nil {
 		panic(err)
 	}
@@ -20,21 +17,6 @@ func setupMqtt() *MQTT.ClientOptions {
 	opts.SetUsername(config["username"].(string))
 	opts.SetPassword(config["password"].(string))
 	return opts
-}
-
-func readConfigSection(path string, section string) (resultMap map[string]interface{}, err error) {
-	jsonFile, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer jsonFile.Close()
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	var dat map[string]interface{}
-	if err := json.Unmarshal(byteValue, &dat); err != nil {
-		return nil, err
-	}
-	resultMap = dat[section].(map[string]interface{})
-	return
 }
 
 func main() {
