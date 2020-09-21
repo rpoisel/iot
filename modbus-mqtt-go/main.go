@@ -13,16 +13,11 @@ import (
 	CONF "github.com/rpoisel/modbus-mqtt/conf"
 )
 
-func setupMqtt() *MQTT.ClientOptions {
-	config, err := CONF.ReadConfigSection("/etc/homeautomation.json", "mqtt")
-	if err != nil {
-		panic(err)
-	}
-
+func setupMqtt(conf *CONF.Config) *MQTT.ClientOptions {
 	opts := MQTT.NewClientOptions()
-	opts.AddBroker(config["broker"].(string))
-	opts.SetUsername(config["username"].(string))
-	opts.SetPassword(config["password"].(string))
+	opts.AddBroker(conf.ValueAsString("broker"))
+	opts.SetUsername(conf.ValueAsString("username"))
+	opts.SetPassword(conf.ValueAsString("password"))
 	return opts
 }
 
@@ -32,13 +27,14 @@ const (
 )
 
 func main() {
-	config, err := CONF.ReadConfigSection("/etc/homeautomation.json", "modbus")
+	conf, err := CONF.NewConfig("/etc/homeautomation.json")
 	if err != nil {
 		panic(err)
 	}
+
 	powerMeters := make(map[byte]*ABB.B23)
 	for _, id := range []byte{obtainedPowerID, solarPowerID} {
-		b23Instance, err := ABB.NewB23(config["device"].(string), id)
+		b23Instance, err := ABB.NewB23(conf.Value("modbus").ValueAsString("device"), id)
 		if err != nil {
 			panic(err.Error())
 		}
@@ -46,7 +42,7 @@ func main() {
 		powerMeters[id] = b23Instance
 	}
 
-	mqttClient := MQTT.NewClient(setupMqtt())
+	mqttClient := MQTT.NewClient(setupMqtt(conf.Value("mqtt")))
 	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}

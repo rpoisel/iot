@@ -10,16 +10,11 @@ import (
 	JoySticks "github.com/splace/joysticks"
 )
 
-func setupMqtt() *MQTT.ClientOptions {
-	config, err := CONF.ReadConfigSection("/etc/homeautomation.json", "mqtt")
-	if err != nil {
-		panic(err)
-	}
-
+func setupMqtt(conf *CONF.Config) *MQTT.ClientOptions {
 	opts := MQTT.NewClientOptions()
-	opts.AddBroker(config["broker"].(string))
-	opts.SetUsername(config["username"].(string))
-	opts.SetPassword(config["password"].(string))
+	opts.AddBroker(conf.ValueAsString("broker"))
+	opts.SetUsername(conf.ValueAsString("username"))
+	opts.SetPassword(conf.ValueAsString("password"))
 	return opts
 }
 
@@ -27,7 +22,12 @@ func main() {
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, os.Interrupt)
 
-	mqttClient := MQTT.NewClient(setupMqtt())
+	conf, err := CONF.NewConfig("/etc/homeautomation.json")
+	if err != nil {
+		panic(err)
+	}
+
+	mqttClient := MQTT.NewClient(setupMqtt(conf.Value("mqtt")))
 	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
