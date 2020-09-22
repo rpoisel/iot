@@ -4,9 +4,9 @@ After=syslog.target network.target
 
 [Service]
 Type=simple
-User=user
+User=rpoisel
 WorkingDirectory=/tmp
-ExecStart=/opt/modbus-mqtt/bin/python /opt/modbus-mqtt/modbus-mqtt.py
+ExecStart=/opt/modbus-mqtt
 Restart=always
 RestartSec=1s
 

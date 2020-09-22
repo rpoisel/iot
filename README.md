@@ -1,2 +1,3 @@
-# AbbB23Energymeter
-Sample C code for interfacing ABB B23 Energy Meters via Modbus/RTU
+# IoT
+
+Source code of the IoT components of my home automation system
