@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/signal"
@@ -10,31 +11,56 @@ import (
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	ABB "github.com/rpoisel/modbus-mqtt/abb"
-	CONF "github.com/rpoisel/modbus-mqtt/conf"
 )
-
-func setupMqtt(conf *CONF.Config) *MQTT.ClientOptions {
-	opts := MQTT.NewClientOptions()
-	opts.AddBroker(conf.ValueAsString("broker"))
-	opts.SetUsername(conf.ValueAsString("username"))
-	opts.SetPassword(conf.ValueAsString("password"))
-	return opts
-}
 
 const (
 	solarPowerID    = 1
 	obtainedPowerID = 2
 )
 
-func main() {
-	conf, err := CONF.NewConfig("/etc/homeautomation.json")
+type MqttConfiguration struct {
+	Broker   string
+	Username string
+	Password string
+}
+
+type Configuration struct {
+	Mqtt   MqttConfiguration
+	Modbus struct {
+		Device string
+	}
+}
+
+func setupMqtt(config MqttConfiguration) (opts *MQTT.ClientOptions) {
+	opts = MQTT.NewClientOptions()
+	opts.AddBroker(config.Broker)
+	opts.SetUsername(config.Username)
+	opts.SetPassword(config.Password)
+	return opts
+}
+
+func readConfig(path string) (config *Configuration) {
+	file, err := os.Open(path)
 	if err != nil {
 		panic(err)
 	}
+	defer file.Close()
+	decoder := json.NewDecoder(file)
+	decoder.DisallowUnknownFields()
+	configuration := Configuration{}
+	err = decoder.Decode(&configuration)
+	if err != nil {
+		panic(err)
+	}
+	return &configuration
+}
+
+func main() {
+	configuration := readConfig("/etc/homeautomation.json")
 
 	powerMeters := make(map[byte]*ABB.B23)
 	for _, id := range []byte{obtainedPowerID, solarPowerID} {
-		b23Instance, err := ABB.NewB23(conf.Value("modbus").ValueAsString("device"), id)
+		b23Instance, err := ABB.NewB23(configuration.Modbus.Device, id)
 		if err != nil {
 			panic(err.Error())
 		}
@@ -42,7 +68,7 @@ func main() {
 		powerMeters[id] = b23Instance
 	}
 
-	mqttClient := MQTT.NewClient(setupMqtt(conf.Value("mqtt")))
+	mqttClient := MQTT.NewClient(setupMqtt(configuration.Mqtt))
 	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
