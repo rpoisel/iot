@@ -1,4 +1,4 @@
-package abb
+package main
 
 import (
 	"bytes"

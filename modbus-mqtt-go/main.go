@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"time"
 
-	ABB "github.com/rpoisel/modbus-mqtt/abb"
 	UTIL "github.com/rpoisel/modbus-mqtt/util"
 )
 
@@ -28,9 +27,9 @@ func main() {
 	configuration := Configuration{}
 	UTIL.ReadConfig("/etc/homeautomation.json", &configuration)
 
-	powerMeters := make(map[byte]*ABB.B23)
+	powerMeters := make(map[byte]*B23)
 	for _, id := range []byte{obtainedPowerID, solarPowerID} {
-		b23Instance, err := ABB.NewB23(configuration.Modbus.Device, id)
+		b23Instance, err := NewB23(configuration.Modbus.Device, id)
 		if err != nil {
 			panic(err.Error())
 		}
