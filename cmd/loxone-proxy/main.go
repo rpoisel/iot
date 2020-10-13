@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
-	UTIL "github.com/rpoisel/modbus-mqtt/util"
+	UTIL "github.com/rpoisel/IoT/internal/util"
 )
 
 type LoxoneConfiguration struct {

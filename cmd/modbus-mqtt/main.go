@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"time"
 
-	UTIL "github.com/rpoisel/modbus-mqtt/util"
+	UTIL "github.com/rpoisel/IoT/internal/util"
 )
 
 const (
