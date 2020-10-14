@@ -1,7 +1,10 @@
 package util
 
 import (
+	"bytes"
+	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"os"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
@@ -40,4 +43,26 @@ func SetupMqtt(config MqttConfiguration, defaultHandler MQTT.MessageHandler) (cl
 		panic(token.Error())
 	}
 	return client
+}
+
+type Readings struct {
+	Solar    int32
+	Obtained int32
+	Total    int32
+}
+
+func NewReadings(buf []byte) (r *Readings, err error) {
+	if len(buf) != 12 {
+		return nil, errors.New("Given buffer has size != 12")
+	}
+	r = new(Readings)
+	reader := bytes.NewReader(buf)
+	err = binary.Read(reader, binary.LittleEndian, r)
+	return
+}
+
+func (r Readings) ToBuf() (buf []byte) {
+	b := new(bytes.Buffer)
+	binary.Write(b, binary.LittleEndian, r)
+	return b.Bytes()
 }

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 	"os"
 	"os/signal"
@@ -48,7 +46,10 @@ func main() {
 		case <-stopChan:
 			return
 		default:
-			obtainedPower, err := powerMeters[obtainedPowerID].Power()
+			var err error
+			var readings UTIL.Readings
+
+			readings.Obtained, err = powerMeters[obtainedPowerID].Power()
 			if err != nil {
 				time.Sleep(100 * time.Millisecond)
 				continue
@@ -56,7 +57,7 @@ func main() {
 
 			time.Sleep(100 * time.Millisecond)
 
-			solarPower, err := powerMeters[solarPowerID].Power()
+			readings.Solar, err = powerMeters[solarPowerID].Power()
 			if err != nil {
 				time.Sleep(100 * time.Millisecond)
 				continue
@@ -64,25 +65,20 @@ func main() {
 
 			time.Sleep(1000 * time.Millisecond)
 
-			var totalPower int32
-			if solarPower > 0 {
-				totalPower = solarPower + obtainedPower
+			if readings.Solar > 0 {
+				readings.Total = readings.Solar + readings.Obtained
 			} else {
-				totalPower = obtainedPower
+				readings.Total = readings.Obtained
 			}
 
-			text := fmt.Sprintf("%d", obtainedPower)
+			text := fmt.Sprintf("%d", readings.Obtained)
 			mqttClient.Publish("/homeautomation/power/obtained", 0, false, text)
-			text = fmt.Sprintf("%d", solarPower)
+			text = fmt.Sprintf("%d", readings.Solar)
 			mqttClient.Publish("/homeautomation/power/solar", 0, false, text)
-			text = fmt.Sprintf("%d", totalPower)
+			text = fmt.Sprintf("%d", readings.Total)
 			mqttClient.Publish("/homeautomation/power/total", 0, false, text)
 
-			buf := new(bytes.Buffer)
-			binary.Write(buf, binary.LittleEndian, solarPower)
-			binary.Write(buf, binary.LittleEndian, obtainedPower)
-			binary.Write(buf, binary.LittleEndian, totalPower)
-			mqttClient.Publish("/homeautomation/power/cumulative", 0, false, buf.Bytes())
+			mqttClient.Publish("/homeautomation/power/cumulative", 0, false, readings.ToBuf())
 		}
 	}
 }

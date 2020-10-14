@@ -4,6 +4,9 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"log"
+	"os"
+	"os/signal"
 	"time"
 
 	. "github.com/go-jet/jet/v2/postgres"
@@ -11,6 +14,7 @@ import (
 	"github.com/rpoisel/IoT/cmd/mqtt-db-postgres/power/public/model"
 	. "github.com/rpoisel/IoT/cmd/mqtt-db-postgres/power/public/table"
 
+	MQTT "github.com/eclipse/paho.mqtt.golang"
 	UTIL "github.com/rpoisel/IoT/internal/util"
 )
 
@@ -25,6 +29,18 @@ type Configuration struct {
 	}
 }
 
+func defaultMqttPublishHandler(_ MQTT.Client, msg MQTT.Message) {
+	log.Print("Unhandled MQTT message ", msg)
+}
+
+func powerPublishHandler(_ MQTT.Client, msg MQTT.Message) {
+	r, err := UTIL.NewReadings(msg.Payload())
+	if err != nil {
+		fmt.Printf("Unhandled message: %s", err)
+	}
+	fmt.Printf("%s: Solar = %d, Total = %d\n", time.Now().Format(time.UnixDate), r.Solar, r.Total)
+}
+
 func main() {
 	var configPath = flag.String("c", "/etc/homeautomation.json", "Path to the configuration file")
 	flag.Parse()
@@ -35,18 +51,24 @@ func main() {
 		panic(err)
 	}
 
-	var connectString = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		configuration.Postgres.Host,
-		configuration.Postgres.Port,
-		configuration.Postgres.User,
-		configuration.Postgres.Password,
-		configuration.Postgres.DbName)
+	stopChan := make(chan os.Signal, 1)
+	signal.Notify(stopChan, os.Interrupt)
 
-	db, err := sql.Open("postgres", connectString)
+	db, err := sql.Open("postgres",
+		fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+			configuration.Postgres.Host,
+			configuration.Postgres.Port,
+			configuration.Postgres.User,
+			configuration.Postgres.Password,
+			configuration.Postgres.DbName))
 	if err != nil {
 		panic(err)
 	}
 	defer db.Close()
+
+	mqttClient := UTIL.SetupMqtt(configuration.Mqtt, defaultMqttPublishHandler)
+	defer mqttClient.Disconnect(250)
+	mqttClient.Subscribe("/homeautomation/power/cumulative", 0 /* qos */, powerPublishHandler)
 
 	// using table data types
 	stmt := SELECT(Power.Modtime, Power.Solar, Power.Total).
@@ -64,4 +86,7 @@ func main() {
 	for _, record := range dest {
 		fmt.Printf("%s: Solar = %d, Total = %d\n", record.Modtime.Format(time.UnixDate), record.Solar, record.Total)
 	}
+
+	<-stopChan
+	fmt.Println("Good bye!")
 }
