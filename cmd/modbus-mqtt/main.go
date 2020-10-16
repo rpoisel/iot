@@ -14,7 +14,7 @@ const (
 	obtainedPowerID = 2
 )
 
-type Configuration struct {
+type configuration struct {
 	Mqtt   UTIL.MqttConfiguration
 	Modbus struct {
 		Device string
@@ -22,7 +22,7 @@ type Configuration struct {
 }
 
 func main() {
-	configuration := Configuration{}
+	configuration := configuration{}
 	UTIL.ReadConfig("/etc/homeautomation.json", &configuration)
 
 	powerMeters := make(map[byte]*B23)

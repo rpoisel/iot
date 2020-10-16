@@ -12,7 +12,7 @@ import (
 	UTIL "github.com/rpoisel/IoT/internal/util"
 )
 
-type LoxoneConfiguration struct {
+type loxoneConfiguration struct {
 	Miniserver string
 	Username   string
 	Password   string
@@ -20,12 +20,12 @@ type LoxoneConfiguration struct {
 	Blinds     map[string]string
 }
 
-type Configuration struct {
+type configuration struct {
 	Mqtt   UTIL.MqttConfiguration
-	Loxone LoxoneConfiguration
+	Loxone loxoneConfiguration
 }
 
-func sendHttpGetRequest(path string, username string, password string) {
+func sendHTTPGetRequest(path string, username string, password string) {
 	client := &http.Client{}
 	req, _ := http.NewRequest("GET", path, nil)
 	req.SetBasicAuth(username, password)
@@ -38,13 +38,13 @@ func defaultMqttPublishHandler(_ MQTT.Client, msg MQTT.Message) {
 
 func blindsPublishHandler(_ MQTT.Client, msg MQTT.Message) {
 	srcBlind := strings.Replace(string(msg.Topic()), "/homeautomation/blinds/", "", -1)
-	loxoneBlind, exists := configuration.Loxone.Blinds[srcBlind]
+	loxoneBlind, exists := config.Loxone.Blinds[srcBlind]
 	if !exists {
 		log.Println("Blind does not exist: ", srcBlind)
 		return
 	}
 
-	url := "http://" + configuration.Loxone.Miniserver + "/dev/sps/io/" + loxoneBlind + "/"
+	url := "http://" + config.Loxone.Miniserver + "/dev/sps/io/" + loxoneBlind + "/"
 	payload := strings.ToLower(string(msg.Payload()))
 	if payload == "up" {
 		url += "Up"
@@ -53,21 +53,21 @@ func blindsPublishHandler(_ MQTT.Client, msg MQTT.Message) {
 	} else {
 		return
 	}
-	go sendHttpGetRequest(url, configuration.Loxone.Username, configuration.Loxone.Password)
+	go sendHTTPGetRequest(url, config.Loxone.Username, config.Loxone.Password)
 }
 
-var configuration Configuration = Configuration{}
+var config configuration = configuration{}
 
 func main() {
-	UTIL.ReadConfig("/etc/homeautomation.json", &configuration)
+	UTIL.ReadConfig("/etc/homeautomation.json", &config)
 
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, os.Interrupt)
 
-	mqttClient := UTIL.SetupMqtt(configuration.Mqtt, defaultMqttPublishHandler)
+	mqttClient := UTIL.SetupMqtt(config.Mqtt, defaultMqttPublishHandler)
 	defer mqttClient.Disconnect(250)
 
-	for src := range configuration.Loxone.Blinds {
+	for src := range config.Loxone.Blinds {
 		mqttClient.Subscribe("/homeautomation/blinds/"+src, 0 /* qos */, blindsPublishHandler)
 	}
 
