@@ -1,0 +1,14 @@
+[Unit]
+Description=loxone-proxy
+After=syslog.target network.target
+
+[Service]
+Type=simple
+User=rpoisel
+WorkingDirectory=/tmp
+ExecStart=/opt/loxone-proxy
+Restart=always
+RestartSec=1s
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,19 @@
+- name: Stop modbus-mqtt service
+  ignore_errors: yes
+  systemd:
+    state: stopped
+    name: "{{ service_name }}"
+- name: Deploy daemon
+  copy:
+    src: "{{ service_executable }}"
+    dest: /opt
+- name: Deploy service definition
+  copy:
+    src: "{{ service_script }}"
+    dest: /etc/systemd/system
+- name: Enable and start service
+  systemd:
+    enabled: yes
+    daemon_reload: yes
+    state: started
+    name: "{{ service_name }}"
