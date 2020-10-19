@@ -1,0 +1,8 @@
+- name: update homeautomation Raspberry Pis
+  hosts: raspberries
+  remote_user: root
+  tasks:
+    - name: update apt cache
+      apt:
+        update_cache: yes
+        upgrade: full
