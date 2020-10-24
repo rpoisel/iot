@@ -1,3 +1,4 @@
+---
 - hosts: raspberry_u
   roles:
     - role: goservice

@@ -42,7 +42,7 @@ func powerPublishHandler(_ MQTT.Client, msg MQTT.Message) {
 }
 
 func main() {
-	var configPath = flag.String("c", "/etc/homeautomation.json", "Path to the configuration file")
+	var configPath = flag.String("c", "/etc/homeautomation.yaml", "Path to the configuration file")
 	flag.Parse()
 
 	configuration := Configuration{}

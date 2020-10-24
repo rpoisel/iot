@@ -1,3 +1,4 @@
+---
 - name: Stop modbus-mqtt service
   ignore_errors: yes
   systemd:

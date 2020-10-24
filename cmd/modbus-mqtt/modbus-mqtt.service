@@ -6,7 +6,7 @@ After=syslog.target network.target
 Type=simple
 User=rpoisel
 WorkingDirectory=/tmp
-ExecStart=/opt/modbus-mqtt
+ExecStart=/opt/modbus-mqtt -c /etc/homeautomation.yaml
 Restart=always
 RestartSec=1s
 

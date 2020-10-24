@@ -3,17 +3,18 @@ package util
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"errors"
 	"os"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
+	"gopkg.in/yaml.v3"
 )
 
 type MqttConfiguration struct {
 	Broker   string
 	Username string
 	Password string
+	BasePath string
 }
 
 func ReadConfig(path string, config interface{}) (err error) {
@@ -22,7 +23,7 @@ func ReadConfig(path string, config interface{}) (err error) {
 		return err
 	}
 	defer file.Close()
-	decoder := json.NewDecoder(file)
+	decoder := yaml.NewDecoder(file)
 	err = decoder.Decode(config)
 	if err != nil {
 		return err

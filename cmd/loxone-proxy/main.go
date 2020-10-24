@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -59,7 +60,10 @@ func blindsPublishHandler(_ MQTT.Client, msg MQTT.Message) {
 var config configuration = configuration{}
 
 func main() {
-	UTIL.ReadConfig("/etc/homeautomation.json", &config)
+	var configPath = flag.String("c", "/etc/homeautomation.yaml", "Path to the configuration file")
+	flag.Parse()
+
+	UTIL.ReadConfig(*configPath, &config)
 
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, os.Interrupt)

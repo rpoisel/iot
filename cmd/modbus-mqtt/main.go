@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -22,8 +23,11 @@ type configuration struct {
 }
 
 func main() {
+	var configPath = flag.String("c", "/etc/homeautomation.yaml", "Path to the configuration file")
+	flag.Parse()
+
 	configuration := configuration{}
-	UTIL.ReadConfig("/etc/homeautomation.json", &configuration)
+	UTIL.ReadConfig(*configPath, &configuration)
 
 	powerMeters := make(map[byte]*B23)
 	for _, id := range []byte{obtainedPowerID, solarPowerID} {
