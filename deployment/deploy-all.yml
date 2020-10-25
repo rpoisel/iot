@@ -1,2 +1,0 @@
-- import_playbook: modbus-mqtt.yml
-- import_playbook: loxone-proxy.yml

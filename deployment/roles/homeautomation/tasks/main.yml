@@ -1,0 +1,8 @@
+---
+- fail:
+    msg: "Variable '{{ config_dir }}' is not defined"
+  with_items: "{{ config_dir }}"
+  when: config_dir is undefined
+- name: Deploy configuration file
+  run_once: true
+  copy: src={{ config_dir }}/homeautomation.yaml dest=/etc

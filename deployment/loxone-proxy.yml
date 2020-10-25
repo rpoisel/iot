@@ -1,7 +1,0 @@
-- hosts: raspberry_u
-  roles:
-    - role: goservice
-      vars:
-        service_name: loxone-proxy
-        service_executable: ../cmd/loxone-proxy/loxone-proxy
-        service_script: ../cmd/loxone-proxy/loxone-proxy.service

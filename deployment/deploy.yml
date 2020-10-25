@@ -1,0 +1,29 @@
+---
+- hosts: all
+  become: true
+  roles:
+    - role: homeautomation
+
+- hosts: mqtt_hub
+  tasks:
+    - name: Deploy MQTT Postgres bridge
+      run_once: true
+      copy: src=../cmd/mqtt-db-postgres/mqtt-db-postgres dest=/tmp
+
+- hosts: controller_u
+  become: true
+  tasks:
+    - name: Deploy Modbus MQTT service
+      import_role:
+        name: goservice
+      vars:
+        service_name: modbus-mqtt
+        service_executable: ../cmd/modbus-mqtt/modbus-mqtt
+        service_script: ../cmd/modbus-mqtt/modbus-mqtt.service
+    - name: Deploy Loxone Proxy
+      import_role:
+        name: goservice
+      vars:
+        service_name: loxone-proxy
+        service_executable: ../cmd/loxone-proxy/loxone-proxy
+        service_script: ../cmd/loxone-proxy/loxone-proxy.service

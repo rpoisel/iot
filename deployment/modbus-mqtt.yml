@@ -1,8 +1,0 @@
----
-- hosts: raspberry_u
-  roles:
-    - role: goservice
-      vars:
-        service_name: modbus-mqtt
-        service_executable: ../cmd/modbus-mqtt/modbus-mqtt
-        service_script: ../cmd/modbus-mqtt/modbus-mqtt.service
