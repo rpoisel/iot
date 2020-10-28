@@ -1,14 +1,90 @@
 ---
-- hosts: all
+- name: Setup LXC for remote access
+  hosts: mqtt_hub
+  tasks:
+    - name: Enable HTTPS listener
+      shell: |
+        /snap/bin/lxc config set core.trust_password=supersecret
+        /snap/bin/lxc config set "core.https_address=localhost:{{ remote_hostport }}"
+    - name: Reload LXD
+      become: true
+      systemd:
+        state: reloaded
+        name: snap.lxd.daemon
+    - name: Tunnel setup
+      shell: |
+        ssh -fN -L "{{ local_hostport }}:localhost:{{ remote_hostport }}" "{{ inventory_hostname }}"
+        sleep 5
+      delegate_to: localhost
+    - name: Adding LXC remote
+      shell: >
+        lxc remote add "{{ inventory_hostname }}" "localhost:{{ local_hostport }}" --accept-certificate --password=supersecret
+      delegate_to: localhost
+
+- name: Create containers
+  hosts: mqtt_hub
+  tasks:
+    - name: create containers
+      loop: "{{ groups['containers'] }}"
+      lxd_container:
+        name: "{{ item }}"
+        state: started
+        source:
+          type: image
+          mode: pull
+          server: https://images.linuxcontainers.org
+          alias: debian/bullseye/armhf
+
+- name: Prepare containers
+  hosts: containers
+  gather_facts: false
+  roles:
+    - prepare_container
+
+- name: Install homeautomation config file
+  hosts: all
   become: true
   roles:
     - role: homeautomation
 
-- hosts: mqtt_hub
+- name: Provision containers
+  hosts: debian-sandbox
   tasks:
+    - name: Install packages
+      apt:
+        update_cache: true
+        state: present
+        name:
+          - postgresql
     - name: Deploy MQTT Postgres bridge
-      run_once: true
-      copy: src=../cmd/mqtt-db-postgres/mqtt-db-postgres dest=/tmp
+      import_role:
+        name: goservice
+      vars:
+        service_name: mqtt-db-postgres
+        service_executable: ../cmd/mqtt-db-postgres/mqtt-db-postgres
+        service_script: ../cmd/mqtt-db-postgres/mqtt-db-postgres.service
+
+- name: Teardown LXC for remote access
+  hosts: mqtt_hub
+  tasks:
+    - name: LXC remote removal
+      shell: >
+        /snap/bin/lxc remote remove "{{ inventory_hostname }}"
+      delegate_to: localhost
+    - name: Tunnel teardown
+      ignore_errors: true
+      shell: >
+        pkill -TERM -u {{ ansible_user }} -f -- "ssh -fN -L {{ local_hostport }}:localhost:{{ remote_hostport }}" || true
+      delegate_to: localhost
+    - name: Disable HTTPS listener
+      shell: |
+        /snap/bin/lxc config unset core.https_address
+        /snap/bin/lxc config unset core.trust_password
+    - name: Reload LXD
+      become: true
+      systemd:
+        state: reloaded
+        name: snap.lxd.daemon
 
 - hosts: controller_u
   become: true

@@ -1,0 +1,3 @@
+---
+- name: install essential packages
+  raw: apt-get install -y apt-utils python3 wget gpg

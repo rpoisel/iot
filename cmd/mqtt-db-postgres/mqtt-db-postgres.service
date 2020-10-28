@@ -1,0 +1,15 @@
+[Unit]
+Description=mqtt-db-postgres
+After=syslog.target network.target
+
+[Service]
+Type=simple
+User=rpoisel
+WorkingDirectory=/tmp
+ExecStart=/opt/mqtt-db-postgres -c /etc/homeautomation.yaml
+Restart=always
+RestartSec=1s
+
+[Install]
+WantedBy=multi-user.target
+
