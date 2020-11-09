@@ -8,6 +8,7 @@ RUN go build -o loxone-proxy
 FROM debian:bullseye-slim
 WORKDIR /
 COPY --from=builder /go/src/IoT/cmd/loxone-proxy/loxone-proxy .
+RUN apt-get update && apt-get install -yy ca-certificates
 
 CMD ["/loxone-proxy"]
 
