@@ -29,10 +29,6 @@ type Configuration struct {
 	}
 }
 
-func defaultMqttPublishHandler(_ MQTT.Client, msg MQTT.Message) {
-	log.Print("Unhandled MQTT message ", msg)
-}
-
 func powerPublishHandler(_ MQTT.Client, msg MQTT.Message) {
 	r, err := UTIL.NewReadings(msg.Payload())
 	if err != nil {
@@ -66,9 +62,12 @@ func main() {
 	}
 	defer db.Close()
 
-	mqttClient := UTIL.SetupMqtt(configuration.Mqtt, defaultMqttPublishHandler)
+	mqttClient := UTIL.SetupMqtt(configuration.Mqtt, func(_ MQTT.Client, msg MQTT.Message) {
+		log.Print("Unhandled MQTT message ", msg)
+	}, func(client MQTT.Client) {
+		client.Subscribe("/homeautomation/power/cumulative", 0 /* qos */, powerPublishHandler)
+	})
 	defer mqttClient.Disconnect(250)
-	mqttClient.Subscribe("/homeautomation/power/cumulative", 0 /* qos */, powerPublishHandler)
 
 	// using table data types
 	stmt := SELECT(Power.Modtime, Power.Solar, Power.Total).

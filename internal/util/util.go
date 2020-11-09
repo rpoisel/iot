@@ -31,13 +31,16 @@ func ReadConfig(path string, config interface{}) (err error) {
 	return nil
 }
 
-func SetupMqtt(config MqttConfiguration, defaultHandler MQTT.MessageHandler) (client MQTT.Client) {
+func SetupMqtt(config MqttConfiguration, defaultMsgHandler MQTT.MessageHandler, onConnectHandler MQTT.OnConnectHandler) (client MQTT.Client) {
 	opts := MQTT.NewClientOptions()
 	opts.AddBroker(config.Broker)
 	opts.SetUsername(config.Username)
 	opts.SetPassword(config.Password)
-	if defaultHandler != nil {
-		opts.SetDefaultPublishHandler(defaultHandler)
+	if defaultMsgHandler != nil {
+		opts.SetDefaultPublishHandler(defaultMsgHandler)
+	}
+	if onConnectHandler != nil {
+		opts.SetOnConnectHandler(onConnectHandler)
 	}
 	client = MQTT.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {

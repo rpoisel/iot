@@ -20,7 +20,7 @@ func main() {
 	configuration := Configuration{}
 	UTIL.ReadConfig("/etc/homeautomation.json", &configuration)
 
-	mqttClient := UTIL.SetupMqtt(configuration.Mqtt, nil)
+	mqttClient := UTIL.SetupMqtt(configuration.Mqtt, nil, nil)
 	defer mqttClient.Disconnect(250)
 
 	evts := JoySticks.Capture(

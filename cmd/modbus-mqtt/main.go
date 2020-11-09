@@ -39,7 +39,7 @@ func main() {
 		powerMeters[id] = b23Instance
 	}
 
-	mqttClient := UTIL.SetupMqtt(configuration.Mqtt, nil)
+	mqttClient := UTIL.SetupMqtt(configuration.Mqtt, nil, nil)
 	defer mqttClient.Disconnect(250)
 
 	stopChan := make(chan os.Signal, 1)

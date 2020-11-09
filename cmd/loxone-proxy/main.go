@@ -33,10 +33,6 @@ func sendHTTPGetRequest(path string, username string, password string) {
 	client.Do(req)
 }
 
-func defaultMqttPublishHandler(_ MQTT.Client, msg MQTT.Message) {
-	log.Print("Unhandled MQTT message ", msg)
-}
-
 func blindsPublishHandler(_ MQTT.Client, msg MQTT.Message) {
 	srcBlind := strings.Replace(string(msg.Topic()), "/homeautomation/blinds/", "", -1)
 	loxoneBlind, exists := config.Loxone.Blinds[srcBlind]
@@ -68,12 +64,14 @@ func main() {
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, os.Interrupt)
 
-	mqttClient := UTIL.SetupMqtt(config.Mqtt, defaultMqttPublishHandler)
+	mqttClient := UTIL.SetupMqtt(config.Mqtt, func(_ MQTT.Client, msg MQTT.Message) {
+		log.Print("Unhandled MQTT message ", msg)
+	}, func(client MQTT.Client) {
+		for src := range config.Loxone.Blinds {
+			client.Subscribe("/homeautomation/blinds/"+src, 0 /* qos */, blindsPublishHandler)
+		}
+	})
 	defer mqttClient.Disconnect(250)
-
-	for src := range config.Loxone.Blinds {
-		mqttClient.Subscribe("/homeautomation/blinds/"+src, 0 /* qos */, blindsPublishHandler)
-	}
 
 	<-stopChan
 	fmt.Println("Good bye!")
