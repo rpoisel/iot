@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 	"os/signal"
@@ -14,11 +15,14 @@ type Configuration struct {
 }
 
 func main() {
-	stopChan := make(chan os.Signal, 1)
-	signal.Notify(stopChan, os.Interrupt)
+	var configPath = flag.String("c", "/etc/homeautomation.yaml", "Path to the configuration file")
+	flag.Parse()
 
 	configuration := Configuration{}
-	UTIL.ReadConfig("/etc/homeautomation.json", &configuration)
+	UTIL.ReadConfig(*configPath, &configuration)
+
+	stopChan := make(chan os.Signal, 1)
+	signal.Notify(stopChan, os.Interrupt)
 
 	mqttClient := UTIL.SetupMqtt(configuration.Mqtt, nil, nil)
 	defer mqttClient.Disconnect(250)
