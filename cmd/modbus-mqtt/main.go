@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"time"
 
-	UTIL "github.com/rpoisel/IoT/internal/util"
+	UTIL "github.com/rpoisel/iot/internal/util"
 )
 
 const (
@@ -29,9 +29,9 @@ func main() {
 	configuration := configuration{}
 	UTIL.ReadConfig(*configPath, &configuration)
 
-	powerMeters := make(map[byte]*B23)
+	powerMeters := make(map[byte]*b23)
 	for _, id := range []byte{obtainedPowerID, solarPowerID} {
-		b23Instance, err := NewB23(configuration.Modbus.Device, id)
+		b23Instance, err := newB23(configuration.Modbus.Device, id)
 		if err != nil {
 			panic(err.Error())
 		}

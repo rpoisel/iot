@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/signal"
 
-	UTIL "github.com/rpoisel/IoT/internal/util"
+	UTIL "github.com/rpoisel/iot/internal/util"
 	JoySticks "github.com/splace/joysticks"
 )
 

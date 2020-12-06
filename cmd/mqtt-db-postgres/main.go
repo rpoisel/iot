@@ -9,16 +9,16 @@ import (
 	"os/signal"
 	"time"
 
-	. "github.com/go-jet/jet/v2/postgres"
+	"github.com/go-jet/jet/v2/postgres"
 	_ "github.com/lib/pq"
-	"github.com/rpoisel/IoT/cmd/mqtt-db-postgres/power/public/model"
-	. "github.com/rpoisel/IoT/cmd/mqtt-db-postgres/power/public/table"
+	"github.com/rpoisel/iot/cmd/mqtt-db-postgres/power/public/model"
+	"github.com/rpoisel/iot/cmd/mqtt-db-postgres/power/public/table"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
-	UTIL "github.com/rpoisel/IoT/internal/util"
+	UTIL "github.com/rpoisel/iot/internal/util"
 )
 
-type Configuration struct {
+type configuration struct {
 	Mqtt     UTIL.MqttConfiguration
 	Postgres struct {
 		Host     string
@@ -41,7 +41,7 @@ func main() {
 	var configPath = flag.String("c", "/etc/homeautomation.yaml", "Path to the configuration file")
 	flag.Parse()
 
-	configuration := Configuration{}
+	configuration := configuration{}
 	err := UTIL.ReadConfig(*configPath, &configuration)
 	if err != nil {
 		panic(err)
@@ -70,10 +70,10 @@ func main() {
 	defer mqttClient.Disconnect(250)
 
 	// using table data types
-	stmt := SELECT(Power.Modtime, Power.Solar, Power.Total).
-		FROM(Power).
-		WHERE(Power.Modtime.GT(Timestamp(2020, 6, 30, 12, 20, 0)).
-			AND(Power.Modtime.LT(Timestamp(2020, 6, 30, 12, 30, 0)))).
+	stmt := postgres.SELECT(table.Power.Modtime, table.Power.Solar, table.Power.Total).
+		FROM(table.Power).
+		WHERE(table.Power.Modtime.GT(postgres.Timestamp(2020, 6, 30, 12, 20, 0)).
+			AND(table.Power.Modtime.LT(postgres.Timestamp(2020, 6, 30, 12, 30, 0)))).
 		LIMIT(20)
 	var dest []model.Power
 	err = stmt.Query(db, &dest)
