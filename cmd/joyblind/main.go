@@ -10,7 +10,7 @@ import (
 	JoySticks "github.com/splace/joysticks"
 )
 
-type Configuration struct {
+type configuration struct {
 	Mqtt UTIL.MqttConfiguration
 }
 
@@ -18,7 +18,7 @@ func main() {
 	var configPath = flag.String("c", "/etc/homeautomation.yaml", "Path to the configuration file")
 	flag.Parse()
 
-	configuration := Configuration{}
+	configuration := configuration{}
 	UTIL.ReadConfig(*configPath, &configuration)
 
 	stopChan := make(chan os.Signal, 1)
