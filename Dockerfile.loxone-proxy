@@ -1,0 +1,15 @@
+FROM golang:1.15 as builder
+ENV CGO_ENABLED=0
+WORKDIR /go/src/IoT
+COPY . .
+WORKDIR /go/src/IoT
+RUN go build -mod=vendor -o loxone-proxy cmd/loxone-proxy/main.go
+
+
+FROM debian:bullseye-slim
+WORKDIR /
+COPY --from=builder /go/src/IoT/loxone-proxy .
+RUN apt-get update && apt-get install -yy ca-certificates
+
+CMD ["/loxone-proxy"]
+

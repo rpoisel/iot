@@ -1,0 +1,12 @@
+FROM golang:1.15 as builder
+ENV CGO_ENABLED=0
+WORKDIR /go/src/IoT
+COPY . .
+RUN go build -mod=vendor -o mqtt-db-postgres cmd/mqtt-db-postgres/main.go
+
+
+FROM debian:bullseye-slim
+WORKDIR /
+COPY --from=builder /go/src/IoT/mqtt-db-postgres .
+
+CMD ["/mqtt-db-postgres"]

@@ -1,0 +1,51 @@
+# cloud.google.com/go v0.73.0
+## explicit
+# github.com/davecgh/go-spew v1.1.0
+github.com/davecgh/go-spew/spew
+# github.com/eclipse/paho.mqtt.golang v1.3.0
+## explicit
+github.com/eclipse/paho.mqtt.golang
+github.com/eclipse/paho.mqtt.golang/packets
+# github.com/go-jet/jet/v2 v2.4.0
+## explicit
+github.com/go-jet/jet/v2/internal/3rdparty/pq
+github.com/go-jet/jet/v2/internal/3rdparty/snaker
+github.com/go-jet/jet/v2/internal/jet
+github.com/go-jet/jet/v2/internal/utils
+github.com/go-jet/jet/v2/postgres
+github.com/go-jet/jet/v2/qrm
+github.com/go-jet/jet/v2/qrm/internal
+# github.com/goburrow/modbus v0.1.0
+## explicit
+github.com/goburrow/modbus
+# github.com/goburrow/serial v0.1.0
+## explicit
+github.com/goburrow/serial
+# github.com/google/uuid v1.1.2
+github.com/google/uuid
+# github.com/gorilla/websocket v1.4.2
+github.com/gorilla/websocket
+# github.com/lib/pq v1.8.0
+## explicit
+github.com/lib/pq
+github.com/lib/pq/oid
+github.com/lib/pq/scram
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
+# github.com/splace/joysticks v0.0.0-20200523190645-fcfd5a84a6c2
+## explicit
+github.com/splace/joysticks
+# github.com/splace/signals v0.0.0-20200924170840-2b9299cb1bca
+## explicit
+# github.com/splace/sounds v0.0.0-20180725230354-43b73b539164
+## explicit
+# github.com/stretchr/testify v1.6.1
+github.com/stretchr/testify/assert
+github.com/stretchr/testify/require
+# golang.org/x/net v0.0.0-20201209123823-ac852fbbde11
+## explicit
+golang.org/x/net/internal/socks
+golang.org/x/net/proxy
+# gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
+## explicit
+gopkg.in/yaml.v3
