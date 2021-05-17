@@ -1,0 +1,42 @@
+---
+version: "1"
+i2c:
+  # one go routine per bus
+  1:
+    in:
+      - name: taster
+        address: 0x38
+        chip: pcf8574
+    out:
+      - name: relays1
+        address: 0x20
+        chip: pcf8574
+      - name: relays2
+        address: 0x21
+        chip: mcp7311
+automation:
+  blinds:
+    # one go routine per blind
+    - name: wohnzimmer-sued1
+      # select on input channels
+      input1: taster[2]
+      input2: taster[3]
+      output: relays1[0]
+  lights:
+    # one go routine per light
+    - name: wohnzimmer
+      inputs:
+        physical:
+          name: taster[0]
+          modify: double
+        mqtt: /homeautomation/inputs/schalter1
+    - name: Stiegenabgang
+      inputs:
+        physical:
+          name: taster[1]
+  mqtt:
+    # one go routine per topic
+    - topic: /homeautomation/inputs/schalter2
+      inputs:
+        physical:
+          name: taster[4]

@@ -1,5 +1,9 @@
-# cloud.google.com/go v0.73.0
+# github.com/d2r2/go-i2c v0.0.0-20191123181816-73a8a799d6bc
 ## explicit
+github.com/d2r2/go-i2c
+# github.com/d2r2/go-logger v0.0.0-20181221090742-9998a510495e
+## explicit
+github.com/d2r2/go-logger
 # github.com/davecgh/go-spew v1.1.0
 github.com/davecgh/go-spew/spew
 # github.com/eclipse/paho.mqtt.golang v1.3.0
@@ -21,10 +25,15 @@ github.com/goburrow/modbus
 # github.com/goburrow/serial v0.1.0
 ## explicit
 github.com/goburrow/serial
+# github.com/google/go-cmp v0.5.4
+## explicit
 # github.com/google/uuid v1.1.2
+## explicit
 github.com/google/uuid
 # github.com/gorilla/websocket v1.4.2
 github.com/gorilla/websocket
+# github.com/kr/pretty v0.1.0
+## explicit
 # github.com/lib/pq v1.8.0
 ## explicit
 github.com/lib/pq
@@ -46,6 +55,10 @@ github.com/stretchr/testify/require
 ## explicit
 golang.org/x/net/internal/socks
 golang.org/x/net/proxy
+# golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
+## explicit
+# gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
+## explicit
 # gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 ## explicit
 gopkg.in/yaml.v3
