@@ -1,2 +1,4 @@
 ## Golang ignores
 coverage.out
+
+cmd/i2c-eg/i2c-eg
