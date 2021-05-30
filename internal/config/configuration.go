@@ -11,33 +11,43 @@ type I2CBus struct {
 	Out []I2CDevice
 }
 
-type PhysicalInput struct {
+type LocalInput struct {
 	Name   string
 	Modify string
 }
 
-type Configuration struct {
-	Version    string
-	I2C        map[int]I2CBus
-	Automation struct {
-		Blinds []struct {
-			Name   string
-			Input1 string
-			Input2 string
-			Output string
+type Automation struct {
+	Blinds []struct {
+		Name    string
+		Input1  string
+		Input2  string
+		Output1 string
+		Output2 string
+	}
+	Lights []struct {
+		Name   string
+		Inputs struct {
+			Local LocalInput
+			MQTT  string
 		}
-		Lights []struct {
-			Name   string
-			Inputs struct {
-				Physical PhysicalInput
-				MQTT     string
-			}
-		}
-		MQTT []struct {
-			Topic  string
-			Inputs struct {
-				Physical PhysicalInput
-			}
+		Output string
+	}
+	MQTT []struct {
+		Topic  string
+		Inputs struct {
+			Local LocalInput
 		}
 	}
+}
+
+type I2C map[int]I2CBus
+
+type IO struct {
+	I2C I2C
+}
+
+type Configuration struct {
+	Version    string
+	Automation Automation
+	IO         IO
 }

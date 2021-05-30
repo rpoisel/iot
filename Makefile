@@ -1,29 +1,41 @@
-all: cmd/modbus-mqtt/modbus-mqtt \
+ALL_BINARIES := cmd/modbus-mqtt/modbus-mqtt \
 	cmd/joyblind/joyblind \
 	cmd/loxone-proxy/loxone-proxy \
 	cmd/mqtt-db-postgres/mqtt-db-postgres \
+	cmd/homeautomation/homeautomation \
 	cmd/i2c-eg/i2c-eg
+GO ?= /usr/lib/go-1.16/bin/go
 
-cmd/modbus-mqtt/modbus-mqtt: cmd/modbus-mqtt/main.go internal/util/util.go
-	(cd cmd/modbus-mqtt && env GOOS=linux GOARCH=arm GOARM=7 go build -v -mod=vendor)
+all: $(ALL_BINARIES)
 
-cmd/joyblind/joyblind: cmd/joyblind/main.go internal/util/util.go
-	(cd cmd/joyblind && go build -v -mod=vendor)
+.PHONY: clean \
+	version \
+	mod_update \
+	$(ALL_BINARIES)
 
-cmd/loxone-proxy/loxone-proxy: cmd/loxone-proxy/main.go internal/util/util.go
-	(cd cmd/loxone-proxy && env GOOS=linux GOARCH=arm GOARM=7 go build -v -mod=vendor)
+cmd/modbus-mqtt/modbus-mqtt:
+	(cd cmd/modbus-mqtt && env GOOS=linux GOARCH=arm GOARM=7 $(GO) build -v -mod=vendor)
 
-cmd/mqtt-db-postgres/mqtt-db-postgres: cmd/mqtt-db-postgres/main.go internal/util/util.go
-	(cd cmd/mqtt-db-postgres && env GOOS=linux GOARCH=arm GOARM=7 go build -v -mod=vendor)
+cmd/joyblind/joyblind:
+	(cd cmd/joyblind && $(GO) build -v -mod=vendor)
 
-cmd/i2c-eg/i2c-eg: cmd/i2c-eg/main.go
-	(cd cmd/i2c-eg && env GOOS=linux GOARCH=arm GOARM=7 go build -v -mod=vendor)
+cmd/loxone-proxy/loxone-proxy:
+	(cd cmd/loxone-proxy && env GOOS=linux GOARCH=arm GOARM=7 $(GO) build -v -mod=vendor)
 
-.PHONY: clean
+cmd/mqtt-db-postgres/mqtt-db-postgres:
+	(cd cmd/mqtt-db-postgres && env GOOS=linux GOARCH=arm GOARM=7 $(GO) build -v -mod=vendor)
+
+cmd/i2c-eg/i2c-eg:
+	(cd cmd/i2c-eg && env GOOS=linux GOARCH=arm GOARM=7 $(GO) build -v -mod=vendor)
+
+cmd/homeautomation/homeautomation:
+	(cd cmd/homeautomation && env GOOS=linux GOARCH=arm GOARM=7 $(GO) build -v -mod=vendor)
+
 clean:
-	-rm \
-		cmd/modbus-mqtt/modbus-mqtt \
-		cmd/joyblind/joyblind \
-		cmd/loxone-proxy/loxone-proxy \
-		cmd/mqtt-db-postgres/mqtt-db-postgres \
-		cmd/i2c-eg/i2c-eg
+	-rm $(ALL_BINARIES)
+
+version:
+	$(GO) version
+
+mod_update:
+	$(GO) get -u all

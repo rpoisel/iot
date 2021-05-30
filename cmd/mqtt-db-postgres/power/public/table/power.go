@@ -31,13 +31,6 @@ type PowerTable struct {
 	EXCLUDED powerTable
 }
 
-// AS creates new PowerTable with assigned alias
-func (a *PowerTable) AS(alias string) *PowerTable {
-	aliasTable := newPowerTable()
-	aliasTable.Table.AS(alias)
-	return aliasTable
-}
-
 func newPowerTable() *PowerTable {
 	return &PowerTable{
 		powerTable: newPowerTableImpl("public", "power"),
@@ -55,7 +48,7 @@ func newPowerTableImpl(schemaName, tableName string) powerTable {
 	)
 
 	return powerTable{
-		Table: postgres.NewTable(schemaName, tableName, allColumns...),
+		Table: postgres.NewTable(schemaName, tableName, "", allColumns...),
 
 		//Columns
 		Modtime: ModtimeColumn,

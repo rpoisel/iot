@@ -4,9 +4,13 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
+	"os"
+	"os/signal"
 
 	"github.com/rpoisel/iot/internal/config"
-	"github.com/rpoisel/iot/internal/i2c"
+	"github.com/rpoisel/iot/internal/domain"
+	"github.com/rpoisel/iot/internal/io"
+	"github.com/rpoisel/iot/internal/io/i2c"
 	"gopkg.in/yaml.v3"
 )
 
@@ -14,21 +18,25 @@ func main() {
 	configPath := flag.String("c", "configuration.yml", "path to the configuration file")
 	flag.Parse()
 
-	config := config.Configuration{}
 	configData, err := ioutil.ReadFile(*configPath)
 	if err != nil {
-		log.Fatalf(`Cannot read configuration file "%s": %v\n`, *configPath, err)
+		log.Fatalf("Cannot read configuration file \"%s\": %s\n", *configPath, err)
 	}
 
+	config := config.Configuration{}
 	err = yaml.Unmarshal(configData, &config)
 	if err != nil {
-		log.Fatalf(`Cannot parse configuration file "%s": %v\n`, *configPath, err)
+		log.Fatalf("Cannot parse configuration file \"%s\": %s\n", *configPath, err)
 	}
-	for busNum, devices := range config.I2C {
-		i2cHandle, err := i2c.NewI2CBus(busNum, devices)
-		if err != nil {
-			log.Fatalf(`Cannot create bus handle for bus "%d": %v\n`, busNum, err)
-		}
-		i2cHandle.Start()
+
+	ioDevices := io.NewDevices()
+	if err := i2c.SetupI2C(config.IO.I2C, ioDevices); err != nil {
+		log.Fatalf("Cannot setup IOs: %s\n", err)
 	}
+
+	domain.StartAutomation(&config.Automation, ioDevices)
+
+	sigchan := make(chan os.Signal)
+	signal.Notify(sigchan, os.Interrupt)
+	<-sigchan
 }
