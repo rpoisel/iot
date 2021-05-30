@@ -17,27 +17,35 @@ io:
 automation:
   blinds:
     - name: wohnzimmer-sued1
-      input1: taster[2]
-      input2: taster[3]
+      input1:
+        path: taster[2]
+        modify: single
+      input2:
+        path: taster[3]
+        modify: single
       output1: relays1[0]
       output2: relays1[1]
+      mqtt: /homeautomation/blinds/wohnzimmer-sued1
+
   lights:
-    - name: wohnzimmer
-      inputs:
-        local:
-          name: taster[0]
-          modify: double
-        mqtt: /homeautomation/inputs/schalter1
+    - name: Wohnzimmer
+      input:
+        path: taster[0]
+        modify: double
       output: relays1[2]
+      mqtt: /homeautomation/lights/wohnzimmer
     - name: Stiegenabgang
-      inputs:
-        local:
-          name: taster[1]
-          modify: r_trig
+      input:
+        path: taster[1]
+        modify: single
       output: relays1[3]
+    - name: Stiegenaufgang
+      input:
+        path: taster[1]
+        modify: double
   mqtt:
-    - topic: /homeautomation/inputs/schalter2
-      inputs:
-        local:
-          name: taster[4]
-          modify: double
+    - topic: /homeautomation/blinds/schlafzimmer
+      message: up
+      input:
+        path: taster[4]
+        modify: double

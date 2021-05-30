@@ -11,8 +11,8 @@ import (
 func StartAutomation(automation *config.Automation, devices *io.Devices) {
 	for _, blindConfig := range automation.Blinds {
 		blind := &Blind{
-			Input1:  devices.GetInputChannel(blindConfig.Input1),
-			Input2:  devices.GetInputChannel(blindConfig.Input2),
+			Input1:  devices.GetInputChannel(blindConfig.Input1.Path),
+			Input2:  devices.GetInputChannel(blindConfig.Input2.Path),
 			Output1: devices.GetOutputChannel(blindConfig.Output1),
 			Output2: devices.GetOutputChannel(blindConfig.Output2),
 		}
@@ -20,7 +20,7 @@ func StartAutomation(automation *config.Automation, devices *io.Devices) {
 	}
 	for _, lightConfig := range automation.Lights {
 		light := &Light{
-			Input:  devices.GetInputChannel(lightConfig.Inputs.Local.Name),
+			Input:  devices.GetInputChannel(lightConfig.Input.Path),
 			Output: devices.GetOutputChannel(lightConfig.Output),
 		}
 		go light.Run()

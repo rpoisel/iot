@@ -2,7 +2,6 @@
 version: "1"
 io:
   i2c:
-    # one go routine per bus
     1:
       in:
         - name: taster
@@ -14,14 +13,11 @@ io:
           chip: pcf8574
 automation:
   lights:
-    # one go routine per light
     - name: kueche
-      inputs:
-        local:
-          name: taster[2]
+      input:
+        path: taster[2]
       output: relays[3]
     - name: stiege
-      inputs:
-        local:
-          name: taster[1]
+      input:
+        path: taster[1]
       output: relays[1]

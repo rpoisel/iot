@@ -20,11 +20,9 @@ func (l *LightTestSuite) TestSwitchCycle() {
 	}
 	go light.Run()
 
-	inputCh <- false
 	inputCh <- true
 	l.True(<-outputCh)
 	inputCh <- false
-	inputCh <- true
 	l.False(<-outputCh)
 }
 

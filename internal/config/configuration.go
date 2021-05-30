@@ -12,31 +12,29 @@ type I2CBus struct {
 }
 
 type LocalInput struct {
-	Name   string
+	Path   string
 	Modify string
 }
 
 type Automation struct {
 	Blinds []struct {
 		Name    string
-		Input1  string
-		Input2  string
+		Input1  LocalInput
+		Input2  LocalInput
 		Output1 string
 		Output2 string
+		MQTT    string
 	}
 	Lights []struct {
 		Name   string
-		Inputs struct {
-			Local LocalInput
-			MQTT  string
-		}
+		Input  LocalInput
 		Output string
+		MQTT   string
 	}
 	MQTT []struct {
-		Topic  string
-		Inputs struct {
-			Local LocalInput
-		}
+		Topic   string
+		Message string
+		Input   LocalInput
 	}
 }
 
