@@ -17,6 +17,7 @@ require (
 	github.com/splace/signals v0.0.0-20200924170840-2b9299cb1bca // indirect
 	github.com/splace/sounds v0.0.0-20180725230354-43b73b539164 // indirect
 	github.com/stretchr/testify v1.7.0
+	github.com/trustmaster/goflow v0.0.0-20210124103720-b48b2ee88975
 	golang.org/x/net v0.0.0-20210525063256-abc453219eb5 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
