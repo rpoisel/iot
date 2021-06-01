@@ -17,14 +17,14 @@ func (r *R_Trig) Process() {
 
 type Split2Bool struct {
 	In   <-chan bool
+	Out0 chan<- bool
 	Out1 chan<- bool
-	Out2 chan<- bool
 }
 
 func (s *Split2Bool) Process() {
 	for in := range s.In {
+		s.Out0 <- in
 		s.Out1 <- in
-		s.Out2 <- in
 	}
 }
 
@@ -34,5 +34,6 @@ type NopBool struct {
 
 func (n *NopBool) Process() {
 	for range n.In {
+		// discard all received messages
 	}
 }
