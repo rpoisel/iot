@@ -12,6 +12,7 @@ all: $(ALL_BINARIES)
 .PHONY: clean \
 	version \
 	mod_update \
+	test \
 	$(ALL_BINARIES)
 
 cmd/modbus-mqtt/modbus-mqtt:
@@ -43,3 +44,6 @@ version:
 
 mod_update:
 	$(GO) get -u all
+
+test:
+	go test -mod=vendor ./...

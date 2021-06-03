@@ -2,7 +2,7 @@ package homeautomation
 
 type Light struct {
 	state bool
-	In    <-chan bool
+	In    <-chan interface{}
 	Out   chan<- bool
 }
 
