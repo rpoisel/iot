@@ -2,8 +2,10 @@ package main
 
 import (
 	"sync"
+	"time"
 
 	"github.com/d2r2/go-logger"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/rpoisel/iot/cmd/flow/components/comm"
 	"github.com/rpoisel/iot/cmd/flow/components/homeautomation"
 	"github.com/rpoisel/iot/cmd/flow/components/io"
@@ -15,11 +17,24 @@ func newHomeautomationApp() *graph.Graph {
 	n := graph.NewGraph()
 
 	m := &sync.Mutex{}
+	opts := mqtt.NewClientOptions().AddBroker("tcp://broker:1883")
+	opts.SetUsername("user")
+	opts.SetPassword("pass")
+	opts.SetClientID("id")
+	opts.SetKeepAlive(2 * time.Second)
+	opts.SetDefaultPublishHandler(func(client mqtt.Client, msg mqtt.Message) {})
+	opts.SetPingTimeout(1 * time.Second)
+
+	mqttClient := mqtt.NewClient(opts)
+	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
+		panic(token.Error())
+	}
 
 	n.AddOrPanic("pcf8574in", io.NewPCF8574In(1, 0x38, m))
 	n.AddOrPanic("pcf8574out", io.NewPCF8574Out(1, 0x20, m))
-	n.AddOrPanic("MQTTin", new(comm.MQTTReceive))
-	n.AddOrPanic("cmp", logic.NewCompareString("true"))
+	n.AddOrPanic("MQTTin", comm.NewMQTTReceive(mqttClient, "/homeautomation/lights/KuecheZeile"))
+	n.AddOrPanic("MQTTout", comm.NewMQTTPublish(mqttClient, "/homeautomation/lights/OGStiege"))
+	n.AddOrPanic("convert", new(logic.StringToBool))
 	n.AddOrPanic("triggerStiegeLicht", new(logic.R_Trig))
 	n.AddOrPanic("triggerKuecheLichtZeile", new(logic.R_Trig))
 	n.AddOrPanic("lightStiege", new(homeautomation.Light))
@@ -40,8 +55,8 @@ func newHomeautomationApp() *graph.Graph {
 	n.ConnectOrPanic("split", "Out0", "pcf8574out", "Pin1")
 	n.ConnectOrPanic("split", "Out1", "pcf8574out", "Pin2")
 	n.ConnectOrPanic("triggerKuecheLichtZeile", "Out", "lightKuecheZeile", "In")
-	n.ConnectOrPanic("MQTTin", "Out", "cmp", "In")
-	n.ConnectOrPanic("cmp", "Out", "lightKuecheZeile", "In")
+	n.ConnectOrPanic("MQTTin", "Out", "convert", "In")
+	n.ConnectOrPanic("convert", "Out", "lightKuecheZeile", "In")
 	n.ConnectOrPanic("lightKuecheZeile", "Out", "pcf8574out", "Pin3")
 
 	return n
