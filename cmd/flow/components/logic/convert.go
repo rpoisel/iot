@@ -16,3 +16,19 @@ func (s *StringToBool) Process() {
 		}
 	}
 }
+
+type BoolToString struct {
+	In  <-chan bool
+	Out chan<- string
+}
+
+func (b *BoolToString) Process() {
+	for {
+		value := <-b.In
+		if value {
+			b.Out <- "true"
+		} else {
+			b.Out <- "false"
+		}
+	}
+}

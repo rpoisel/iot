@@ -29,7 +29,7 @@ func (s *Split2Bool) Process() {
 }
 
 type NopBool struct {
-	In <-chan interface{}
+	In <-chan bool
 }
 
 func (n *NopBool) Process() {
