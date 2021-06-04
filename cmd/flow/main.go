@@ -7,12 +7,14 @@ import (
 
 	"github.com/caarlos0/env/v6"
 	"github.com/d2r2/go-logger"
+	i2clogger "github.com/d2r2/go-logger"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/rpoisel/iot/cmd/flow/components/comm"
 	"github.com/rpoisel/iot/cmd/flow/components/homeautomation"
 	"github.com/rpoisel/iot/cmd/flow/components/io"
 	"github.com/rpoisel/iot/cmd/flow/components/logic"
 	"github.com/rpoisel/iot/cmd/flow/graph"
+	"go.uber.org/zap"
 )
 
 type config struct {
@@ -22,7 +24,7 @@ type config struct {
 	MQTTBroker string `env:"MQTT_BROKER,required"`
 }
 
-func newHomeautomationApp(cfg *config) *graph.Graph {
+func newHomeautomationApp(cfg *config, logger *zap.SugaredLogger) *graph.Graph {
 	n := graph.NewGraph()
 
 	m := &sync.Mutex{}
@@ -36,13 +38,13 @@ func newHomeautomationApp(cfg *config) *graph.Graph {
 
 	mqttClient := mqtt.NewClient(opts)
 	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
-		panic(token.Error())
+		logger.Panic(token.Error())
 	}
 
-	n.AddOrPanic("pcf8574in", io.NewPCF8574In(1, 0x38, m))
-	n.AddOrPanic("pcf8574out", io.NewPCF8574Out(1, 0x20, m))
-	n.AddOrPanic("MQTTin", comm.NewMQTTReceive(mqttClient, "/homeautomation/lights/KuecheZeile/toggle"))
-	n.AddOrPanic("MQTTout", comm.NewMQTTPublish(mqttClient, "/homeautomation/lights/KuecheZeile/state"))
+	n.AddOrPanic("pcf8574in", io.NewPCF8574In(logger, 1, 0x38, m))
+	n.AddOrPanic("pcf8574out", io.NewPCF8574Out(logger, 1, 0x20, m))
+	n.AddOrPanic("MQTTin", comm.NewMQTTReceive(logger, mqttClient, "/homeautomation/lights/KuecheZeile/toggle"))
+	n.AddOrPanic("MQTTout", comm.NewMQTTPublish(logger, mqttClient, "/homeautomation/lights/KuecheZeile/state"))
 	n.AddOrPanic("convert", new(logic.StringToBool))
 	n.AddOrPanic("triggerStiegeLicht", new(logic.R_Trig))
 	n.AddOrPanic("triggerKuecheLichtZeile", new(logic.R_Trig))
@@ -77,14 +79,21 @@ func newHomeautomationApp(cfg *config) *graph.Graph {
 }
 
 func main() {
-	logger.ChangePackageLogLevel("i2c", logger.InfoLevel)
+	i2clogger.ChangePackageLogLevel("i2c", logger.InfoLevel)
 
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
 		log.Panicf("%+v\n", err)
 	}
 
-	net := newHomeautomationApp(&cfg)
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		log.Panicf("Could not instantiate logger: %s", err)
+	}
+	defer logger.Sync()
+	sugar := logger.Sugar()
+
+	net := newHomeautomationApp(&cfg, sugar)
 
 	wait := net.Run()
 

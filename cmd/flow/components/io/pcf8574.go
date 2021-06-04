@@ -7,9 +7,11 @@ import (
 
 	goi2c "github.com/d2r2/go-i2c"
 	"github.com/rpoisel/iot/cmd/flow/util"
+	"go.uber.org/zap"
 )
 
 type PCF8574In struct {
+	logger *zap.SugaredLogger
 	mutex  *sync.Mutex
 	handle *goi2c.I2C
 	ticker *time.Ticker
@@ -23,14 +25,15 @@ type PCF8574In struct {
 	Pin7   chan<- bool
 }
 
-func NewPCF8574In(bus int, addr uint8, mutex *sync.Mutex) *PCF8574In {
+func NewPCF8574In(logger *zap.SugaredLogger, bus int, addr uint8, mutex *sync.Mutex) *PCF8574In {
 	handle, err := goi2c.NewI2C(addr, bus)
 	if err != nil {
 		log.Panicf("Could not create PCF8574 instance: %s\n", err)
 	}
 	return &PCF8574In{
-		handle: handle,
 		mutex:  mutex,
+		handle: handle,
+		logger: logger,
 		ticker: time.NewTicker(50 * time.Millisecond),
 	}
 }
@@ -59,9 +62,10 @@ func (p *PCF8574In) Process() {
 }
 
 type PCF8574Out struct {
-	state  byte
 	mutex  *sync.Mutex
 	handle *goi2c.I2C
+	logger *zap.SugaredLogger
+	state  byte
 	Pin0   <-chan bool
 	Pin1   <-chan bool
 	Pin2   <-chan bool
@@ -72,15 +76,16 @@ type PCF8574Out struct {
 	Pin7   <-chan bool
 }
 
-func NewPCF8574Out(bus int, addr uint8, mutex *sync.Mutex) *PCF8574Out {
+func NewPCF8574Out(logger *zap.SugaredLogger, bus int, addr uint8, mutex *sync.Mutex) *PCF8574Out {
 	handle, err := goi2c.NewI2C(addr, bus)
 	if err != nil {
 		log.Panicf("Could not create PCF8574 instance: %s\n", err)
 	}
 	return &PCF8574Out{
-		state:  0xff,
-		handle: handle,
 		mutex:  mutex,
+		handle: handle,
+		logger: logger,
+		state:  0xff,
 	}
 }
 
