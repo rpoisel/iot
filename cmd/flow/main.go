@@ -1,9 +1,11 @@
 package main
 
 import (
+	"log"
 	"sync"
 	"time"
 
+	"github.com/caarlos0/env/v6"
 	"github.com/d2r2/go-logger"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/rpoisel/iot/cmd/flow/components/comm"
@@ -13,14 +15,21 @@ import (
 	"github.com/rpoisel/iot/cmd/flow/graph"
 )
 
-func newHomeautomationApp() *graph.Graph {
+type config struct {
+	MQTTUser   string `env:"MQTT_USER,required"`
+	MQTTPass   string `env:"MQTT_PASS,required"`
+	MQTTClient string `env:"MQTT_CLIENTID,required"`
+	MQTTBroker string `env:"MQTT_BROKER,required"`
+}
+
+func newHomeautomationApp(cfg *config) *graph.Graph {
 	n := graph.NewGraph()
 
 	m := &sync.Mutex{}
-	opts := mqtt.NewClientOptions().AddBroker("tcp://broker:1883")
-	opts.SetUsername("user")
-	opts.SetPassword("pass")
-	opts.SetClientID("id")
+	opts := mqtt.NewClientOptions().AddBroker(cfg.MQTTBroker)
+	opts.SetUsername(cfg.MQTTUser)
+	opts.SetPassword(cfg.MQTTPass)
+	opts.SetClientID(cfg.MQTTClient)
 	opts.SetKeepAlive(2 * time.Second)
 	opts.SetDefaultPublishHandler(func(client mqtt.Client, msg mqtt.Message) {})
 	opts.SetPingTimeout(1 * time.Second)
@@ -70,7 +79,12 @@ func newHomeautomationApp() *graph.Graph {
 func main() {
 	logger.ChangePackageLogLevel("i2c", logger.InfoLevel)
 
-	net := newHomeautomationApp()
+	cfg := config{}
+	if err := env.Parse(&cfg); err != nil {
+		log.Panicf("%+v\n", err)
+	}
+
+	net := newHomeautomationApp(&cfg)
 
 	wait := net.Run()
 
