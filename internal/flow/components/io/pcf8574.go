@@ -6,7 +6,7 @@ import (
 	"time"
 
 	goi2c "github.com/d2r2/go-i2c"
-	"github.com/rpoisel/iot/cmd/flow/util"
+	"github.com/rpoisel/iot/internal/flow/util"
 	"go.uber.org/zap"
 )
 
