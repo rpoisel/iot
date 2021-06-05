@@ -8,3 +8,4 @@ cmd/mqtt-db-postgres/mqtt-db-postgres
 cmd/homeautomation/homeautomation
 cmd/i2c-eg/i2c-eg
 cmd/flow-o/flow-o
+cmd/flow-u/flow-u

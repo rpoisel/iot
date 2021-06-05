@@ -4,7 +4,8 @@ ALL_BINARIES := cmd/modbus-mqtt/modbus-mqtt \
 	cmd/mqtt-db-postgres/mqtt-db-postgres \
 	cmd/i2c-eg/i2c-eg \
 	cmd/homeautomation/homeautomation \
-	cmd/flow-o/flow-o
+	cmd/flow-o/flow-o \
+	cmd/flow-u/flow-u
 GO ?= /usr/lib/go-1.16/bin/go
 
 all: $(ALL_BINARIES)
@@ -35,6 +36,9 @@ cmd/homeautomation/homeautomation:
 
 cmd/flow-o/flow-o:
 	(cd cmd/flow-o && env GOOS=linux GOARCH=arm GOARM=7 $(GO) build -v -mod=vendor -o flow-o)
+
+cmd/flow-u/flow-u:
+	(cd cmd/flow-u && env GOOS=linux GOARCH=arm GOARM=7 $(GO) build -v -mod=vendor -o flow-u)
 
 clean:
 	-rm $(ALL_BINARIES)

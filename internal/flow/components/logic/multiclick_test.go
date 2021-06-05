@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rpoisel/iot/cmd/flow/components/logic"
+	"github.com/rpoisel/iot/internal/flow/components/logic"
 	"github.com/stretchr/testify/suite"
 )
 

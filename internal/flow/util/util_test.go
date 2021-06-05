@@ -3,7 +3,7 @@ package util_test
 import (
 	"testing"
 
-	"github.com/rpoisel/iot/cmd/flow/util"
+	"github.com/rpoisel/iot/internal/flow/util"
 	"github.com/stretchr/testify/suite"
 )
 
