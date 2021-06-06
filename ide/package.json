@@ -1,0 +1,41 @@
+{
+  "name": "my-webpack-project",
+  "version": "1.0.0",
+  "description": "My webpack project",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack --mode=production --node-env=production",
+    "build:dev": "webpack --mode=development",
+    "build:prod": "webpack --mode=production --node-env=production",
+    "watch": "webpack --watch",
+    "serve": "webpack serve"
+  },
+  "keywords": [],
+  "author": "Rainer Poisel <rainer.poisel@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "rete": "^1.4.0",
+    "rete-area-plugin": "^0.2.1",
+    "rete-comment-plugin": "^0.7.0-rc.1",
+    "rete-connection-mastery-plugin": "^0.2.4",
+    "rete-connection-plugin": "^0.8.0",
+    "rete-context-menu-plugin": "^0.6.0-rc.1",
+    "rete-history-plugin": "^0.2.2",
+    "rete-vue-render-plugin": "^0.5.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.14.3",
+    "@babel/plugin-syntax-dynamic-import": "^7.8.3",
+    "@babel/preset-env": "^7.14.4",
+    "@webpack-cli/generators": "^2.1.0",
+    "babel-loader": "^8.2.2",
+    "babel-plugin-syntax-dynamic-import": "^6.18.0",
+    "css-loader": "^5.2.6",
+    "html-loader": "^2.1.2",
+    "html-webpack-plugin": "^5.3.1",
+    "style-loader": "^2.0.0",
+    "webpack": "^5.38.1",
+    "webpack-cli": "^4.7.0",
+    "webpack-dev-server": "^3.11.2"
+  }
+}
