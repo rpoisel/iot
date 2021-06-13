@@ -1,4 +1,40 @@
-package main
+package model_test
+
+import (
+	"testing"
+
+	"github.com/rpoisel/iot/cmd/generator/model"
+	"github.com/rpoisel/iot/cmd/generator/model/nodered"
+	"github.com/stretchr/testify/suite"
+)
+
+type ModelTestSuite struct {
+	suite.Suite
+}
+
+type VisitorPrint struct {
+	*testing.T
+}
+
+func (v *VisitorPrint) MQTTIn(n model.NodeMQTTIn) {
+	v.Logf("MQTTIn")
+}
+
+func (v *VisitorPrint) Connection(from model.Node /* need more info - which output pin */, to model.Node) {
+	v.Logf("Connection: %s to %s", from.Name(), to.Name())
+}
+
+func (m *ModelTestSuite) Test() {
+	modelImpl, err := nodered.NodeREDExportParse(s)
+	m.Require().NoError(err)
+	modelImpl.Visit(&VisitorPrint{
+		T: m.T(),
+	})
+}
+
+func TestModelTestSuite(t *testing.T) {
+	suite.Run(t, new(ModelTestSuite))
+}
 
 const s = `[{
 	"id": "f368fc00.a992a",
@@ -394,8 +430,8 @@ const s = `[{
 }, {
 	"id": "7a6b0a36.7a8694",
 	"type": "mqtt-broker",
-	"name": "somehost.local",
-	"broker": "somehost.local",
+	"name": "raspberry-u.local",
+	"broker": "raspberry-u.local",
 	"port": "1883",
 	"clientid": "",
 	"usetls": false,
@@ -419,5 +455,4 @@ const s = `[{
 	"order": 1,
 	"disabled": false,
 	"hidden": false
-}]
-`
+}]`
