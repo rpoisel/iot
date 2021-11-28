@@ -1,0 +1,15 @@
+[Unit]
+Description=Flow Homeautomation
+
+[Service]
+ExecStart=/home/rpoisel/tmp/flow-o
+Restart=always
+Environment="MQTT_USER=xxx"
+Environment="MQTT_PASS=yyy"
+Environment="MQTT_CLIENTID=flow-o"
+Environment="MQTT_BROKER=tcp://zzz:1883"
+User=user
+Group=user
+
+[Install]
+WantedBy=multi-user.target
