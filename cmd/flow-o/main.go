@@ -21,8 +21,10 @@ func newHomeautomationApp(logger *zap.SugaredLogger, cfg *config.Config, compone
 	n.Add("convert", new(logic.StringToBool))
 	n.Add("triggerStiegeLicht", new(logic.R_Trig))
 	n.Add("triggerKuecheLichtZeile", new(logic.R_Trig))
+	n.Add("triggerCharger", new(logic.R_Trig))
 	n.Add("lightStiege", new(homeautomation.Light))
 	n.Add("lightKuecheZeile", new(homeautomation.Light))
+	n.Add("charger", new(homeautomation.Light))
 	n.Add("splitLightStiege", new(logic.Split2Bool))
 	n.Add("splitLightKuecheZeile", new(logic.Split2Bool))
 	n.Add("bool2string", new(logic.BoolToString))
@@ -31,7 +33,7 @@ func newHomeautomationApp(logger *zap.SugaredLogger, cfg *config.Config, compone
 	n.Connect("pcf8574in", "Pin0", "nop", "In")
 	n.Connect("pcf8574in", "Pin1", "triggerStiegeLicht", "In")
 	n.Connect("pcf8574in", "Pin2", "triggerKuecheLichtZeile", "In")
-	n.Connect("pcf8574in", "Pin3", "nop", "In")
+	n.Connect("pcf8574in", "Pin3", "triggerCharger", "In")
 	n.Connect("pcf8574in", "Pin4", "nop", "In")
 	n.Connect("pcf8574in", "Pin5", "nop", "In")
 	n.Connect("pcf8574in", "Pin6", "nop", "In")
@@ -47,6 +49,8 @@ func newHomeautomationApp(logger *zap.SugaredLogger, cfg *config.Config, compone
 	n.Connect("splitLightKuecheZeile", "Out0", "pcf8574out", "Pin3")
 	n.Connect("splitLightKuecheZeile", "Out1", "bool2string", "In")
 	n.Connect("bool2string", "Out", "MQTTout", "In")
+	n.Connect("triggerCharger", "Out", "charger", "In")
+	n.Connect("charger", "Out", "pcf8574out", "Pin0")
 
 	return n
 }
