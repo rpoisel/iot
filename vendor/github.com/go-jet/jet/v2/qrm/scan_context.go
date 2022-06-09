@@ -2,23 +2,26 @@ package qrm
 
 import (
 	"database/sql"
-	"database/sql/driver"
 	"fmt"
-	"github.com/go-jet/jet/v2/internal/utils"
 	"reflect"
 	"strings"
 )
 
-type scanContext struct {
+// ScanContext  contains information about current row processed, mapping from the row to the
+// destination types and type grouping information.
+type ScanContext struct {
 	rowNum                   int64
 	row                      []interface{}
 	uniqueDestObjectsMap     map[string]int
 	commonIdentToColumnIndex map[string]int
 	groupKeyInfoCache        map[string]groupKeyInfo
 	typeInfoMap              map[string]typeInfo
+
+	typesVisited typeStack // to prevent circular dependency scan
 }
 
-func newScanContext(rows *sql.Rows) (*scanContext, error) {
+// NewScanContext creates new ScanContext from rows
+func NewScanContext(rows *sql.Rows) (*ScanContext, error) {
 	aliases, err := rows.Columns()
 
 	if err != nil {
@@ -38,21 +41,34 @@ func newScanContext(rows *sql.Rows) (*scanContext, error) {
 		commonIdentifier := toCommonIdentifier(names[0])
 
 		if len(names) > 1 {
-			commonIdentifier += "." + toCommonIdentifier(names[1])
+			commonIdentifier = concat(commonIdentifier, ".", toCommonIdentifier(names[1]))
 		}
 
 		commonIdentToColumnIndex[commonIdentifier] = i
 	}
 
-	return &scanContext{
-		row:                  createScanValue(columnTypes),
+	return &ScanContext{
+		row:                  createScanSlice(len(columnTypes)),
 		uniqueDestObjectsMap: make(map[string]int),
 
 		groupKeyInfoCache:        make(map[string]groupKeyInfo),
 		commonIdentToColumnIndex: commonIdentToColumnIndex,
 
 		typeInfoMap: make(map[string]typeInfo),
+
+		typesVisited: newTypeStack(),
 	}, nil
+}
+
+func createScanSlice(columnCount int) []interface{} {
+	scanPtrSlice := make([]interface{}, columnCount)
+
+	for i := range scanPtrSlice {
+		var a interface{}
+		scanPtrSlice[i] = &a // if destination is pointer to interface sql.Scan will just forward driver value
+	}
+
+	return scanPtrSlice
 }
 
 type typeInfo struct {
@@ -60,17 +76,17 @@ type typeInfo struct {
 }
 
 type fieldMapping struct {
-	complexType       bool // slice or struct
-	columnIndex       int
+	complexType       bool // slice and struct are complex types
+	rowIndex          int  // index in ScanContext.row
 	implementsScanner bool
 }
 
-func (s *scanContext) getTypeInfo(structType reflect.Type, parentField *reflect.StructField) typeInfo {
+func (s *ScanContext) getTypeInfo(structType reflect.Type, parentField *reflect.StructField) typeInfo {
 
 	typeMapKey := structType.String()
 
 	if parentField != nil {
-		typeMapKey += string(parentField.Tag)
+		typeMapKey = concat(typeMapKey, string(parentField.Tag))
 	}
 
 	if typeInfo, ok := s.typeInfoMap[typeMapKey]; ok {
@@ -88,7 +104,7 @@ func (s *scanContext) getTypeInfo(structType reflect.Type, parentField *reflect.
 		columnIndex := s.typeToColumnIndex(newTypeName, fieldName)
 
 		fieldMap := fieldMapping{
-			columnIndex: columnIndex,
+			rowIndex: columnIndex,
 		}
 
 		if implementsScannerType(field.Type) {
@@ -111,49 +127,58 @@ type groupKeyInfo struct {
 	subTypes []groupKeyInfo
 }
 
-func (s *scanContext) getGroupKey(structType reflect.Type, structField *reflect.StructField) string {
+func (s *ScanContext) getGroupKey(structType reflect.Type, structField *reflect.StructField) string {
 
 	mapKey := structType.Name()
 
 	if structField != nil {
-		mapKey += structField.Type.String()
+		mapKey = concat(mapKey, structField.Type.String())
 	}
 
 	if groupKeyInfo, ok := s.groupKeyInfoCache[mapKey]; ok {
 		return s.constructGroupKey(groupKeyInfo)
 	}
 
-	groupKeyInfo := s.getGroupKeyInfo(structType, structField)
+	tempTypeStack := newTypeStack()
+	groupKeyInfo := s.getGroupKeyInfo(structType, structField, &tempTypeStack)
 
 	s.groupKeyInfoCache[mapKey] = groupKeyInfo
 
 	return s.constructGroupKey(groupKeyInfo)
 }
 
-func (s *scanContext) constructGroupKey(groupKeyInfo groupKeyInfo) string {
+func (s *ScanContext) constructGroupKey(groupKeyInfo groupKeyInfo) string {
 	if len(groupKeyInfo.indexes) == 0 && len(groupKeyInfo.subTypes) == 0 {
 		return fmt.Sprintf("|ROW:%d|", s.rowNum)
 	}
 
-	groupKeys := []string{}
+	var groupKeys []string
 
 	for _, index := range groupKeyInfo.indexes {
-		cellValue := s.rowElem(index)
-		subKey := valueToString(reflect.ValueOf(cellValue))
-
-		groupKeys = append(groupKeys, subKey)
+		groupKeys = append(groupKeys, s.rowElemToString(index))
 	}
 
-	subTypesGroupKeys := []string{}
+	var subTypesGroupKeys []string
 	for _, subType := range groupKeyInfo.subTypes {
 		subTypesGroupKeys = append(subTypesGroupKeys, s.constructGroupKey(subType))
 	}
 
-	return groupKeyInfo.typeName + "(" + strings.Join(groupKeys, ",") + strings.Join(subTypesGroupKeys, ",") + ")"
+	return concat(groupKeyInfo.typeName, "(", strings.Join(groupKeys, ","), strings.Join(subTypesGroupKeys, ","), ")")
 }
 
-func (s *scanContext) getGroupKeyInfo(structType reflect.Type, parentField *reflect.StructField) groupKeyInfo {
+func (s *ScanContext) getGroupKeyInfo(
+	structType reflect.Type,
+	parentField *reflect.StructField,
+	typeVisited *typeStack) groupKeyInfo {
+
 	ret := groupKeyInfo{typeName: structType.Name()}
+
+	if typeVisited.contains(&structType) {
+		return ret
+	}
+
+	typeVisited.push(&structType)
+	defer typeVisited.pop()
 
 	typeName := getTypeName(structType, parentField)
 	primaryKeyOverwrites := parentFieldPrimaryKeyOverwrite(parentField)
@@ -167,7 +192,7 @@ func (s *scanContext) getGroupKeyInfo(structType reflect.Type, parentField *refl
 				continue
 			}
 
-			subType := s.getGroupKeyInfo(fieldType, &field)
+			subType := s.getGroupKeyInfo(fieldType, &field, typeVisited)
 
 			if len(subType.indexes) != 0 || len(subType.subTypes) != 0 {
 				ret.subTypes = append(ret.subTypes, subType)
@@ -190,7 +215,7 @@ func (s *scanContext) getGroupKeyInfo(structType reflect.Type, parentField *refl
 	return ret
 }
 
-func (s *scanContext) typeToColumnIndex(typeName, fieldName string) int {
+func (s *ScanContext) typeToColumnIndex(typeName, fieldName string) int {
 	var key string
 
 	if typeName != "" {
@@ -208,29 +233,34 @@ func (s *scanContext) typeToColumnIndex(typeName, fieldName string) int {
 	return index
 }
 
-func (s *scanContext) rowElem(index int) interface{} {
-
-	valuer, ok := s.row[index].(driver.Valuer)
-
-	utils.MustBeTrue(ok, "jet: internal error, scan value doesn't implement driver.Valuer")
-
-	value, err := valuer.Value()
-
-	utils.PanicOnError(err)
-
-	return value
+// rowElemValue always returns non-ptr value,
+// invalid value is nil
+func (s *ScanContext) rowElemValue(index int) reflect.Value {
+	scannedValue := reflect.ValueOf(s.row[index])
+	return scannedValue.Elem().Elem() // no need to check validity of Elem, because s.row[index] always contains interface in interface
 }
 
-func (s *scanContext) rowElemValuePtr(index int) reflect.Value {
-	rowElem := s.rowElem(index)
-	rowElemValue := reflect.ValueOf(rowElem)
+func (s *ScanContext) rowElemToString(index int) string {
+	value := s.rowElemValue(index)
 
-	if rowElemValue.Kind() == reflect.Ptr {
-		return rowElemValue
+	if !value.IsValid() {
+		return "nil"
 	}
 
-	if rowElemValue.CanAddr() {
-		return rowElemValue.Addr()
+	valueInterface := value.Interface()
+
+	if t, ok := valueInterface.(fmt.Stringer); ok {
+		return t.String()
+	}
+
+	return fmt.Sprintf("%#v", valueInterface)
+}
+
+func (s *ScanContext) rowElemValueClonePtr(index int) reflect.Value {
+	rowElemValue := s.rowElemValue(index)
+
+	if !rowElemValue.IsValid() {
+		return reflect.Value{}
 	}
 
 	newElem := reflect.New(rowElemValue.Type())

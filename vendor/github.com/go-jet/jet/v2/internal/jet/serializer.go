@@ -7,8 +7,10 @@ type SerializeOption int
 const (
 	NoWrap SerializeOption = iota
 	SkipNewLine
+	Ident
 
 	fallTroughOptions // fall trough options
+
 	ShortName
 )
 
@@ -93,4 +95,11 @@ func (s serializerImpl) serialize(statement StatementType, out *SQLBuilder, opti
 	for _, clause := range s.Clauses {
 		clause.Serialize(statement, out, FallTrough(options)...)
 	}
+}
+
+// Token can be used to construct complex custom expressions
+type Token string
+
+func (t Token) serialize(statement StatementType, out *SQLBuilder, options ...SerializeOption) {
+	out.WriteString(string(t))
 }

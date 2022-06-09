@@ -6,7 +6,7 @@ ALL_BINARIES := cmd/modbus-mqtt/modbus-mqtt \
 	cmd/homeautomation/homeautomation \
 	cmd/flow-o/flow-o \
 	cmd/flow-u/flow-u
-GO ?= /usr/lib/go-1.16/bin/go
+GO ?= /usr/lib/go-1.18/bin/go
 
 all: $(ALL_BINARIES)
 

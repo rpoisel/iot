@@ -1,8 +1,9 @@
 package postgres
 
 import (
-	"github.com/go-jet/jet/v2/internal/jet"
 	"math"
+
+	"github.com/go-jet/jet/v2/internal/jet"
 )
 
 // RowLock is interface for SELECT statement row lock types
@@ -43,10 +44,10 @@ type SelectStatement interface {
 	jet.HasProjections
 	Expression
 
-	DISTINCT() SelectStatement
+	DISTINCT(on ...jet.ColumnExpression) SelectStatement
 	FROM(tables ...ReadableTable) SelectStatement
 	WHERE(expression BoolExpression) SelectStatement
-	GROUP_BY(groupByClauses ...jet.GroupByClause) SelectStatement
+	GROUP_BY(groupByClauses ...GroupByClause) SelectStatement
 	HAVING(boolExpression BoolExpression) SelectStatement
 	WINDOW(name string) windowExpand
 	ORDER_BY(orderByClauses ...OrderByClause) SelectStatement
@@ -103,16 +104,14 @@ type selectStatementImpl struct {
 	For     jet.ClauseFor
 }
 
-func (s *selectStatementImpl) DISTINCT() SelectStatement {
+func (s *selectStatementImpl) DISTINCT(on ...jet.ColumnExpression) SelectStatement {
 	s.Select.Distinct = true
+	s.Select.DistinctOnColumns = on
 	return s
 }
 
 func (s *selectStatementImpl) FROM(tables ...ReadableTable) SelectStatement {
-	s.From.Tables = nil
-	for _, table := range tables {
-		s.From.Tables = append(s.From.Tables, table)
-	}
+	s.From.Tables = readableTablesToSerializerList(tables)
 	return s
 }
 
@@ -121,7 +120,7 @@ func (s *selectStatementImpl) WHERE(condition BoolExpression) SelectStatement {
 	return s
 }
 
-func (s *selectStatementImpl) GROUP_BY(groupByClauses ...jet.GroupByClause) SelectStatement {
+func (s *selectStatementImpl) GROUP_BY(groupByClauses ...GroupByClause) SelectStatement {
 	s.GroupBy.List = groupByClauses
 	return s
 }
@@ -180,4 +179,12 @@ func toJetFrameOffset(offset int64) jet.Serializer {
 		return jet.UNBOUNDED
 	}
 	return jet.FixedLiteral(offset)
+}
+
+func readableTablesToSerializerList(tables []ReadableTable) []jet.Serializer {
+	var ret []jet.Serializer
+	for _, table := range tables {
+		ret = append(ret, table)
+	}
+	return ret
 }

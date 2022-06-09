@@ -20,5 +20,15 @@ type PrintableStatement = jet.PrintableStatement
 // OrderByClause is the combination of an expression and the wanted ordering to use as input for ORDER BY.
 type OrderByClause = jet.OrderByClause
 
-// SetLogger sets automatic statement logging
+// GroupByClause interface to use as input for GROUP_BY
+type GroupByClause = jet.GroupByClause
+
+// SetLogger sets automatic statement logging function
+// Deprecated: use SetQueryLogger instead.
 var SetLogger = jet.SetLoggerFunc
+
+// SetQueryLogger sets automatic query logging function.
+var SetQueryLogger = jet.SetQueryLogger
+
+// QueryInfo contains information about executed query
+type QueryInfo = jet.QueryInfo
