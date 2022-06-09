@@ -18,13 +18,13 @@ func NewGraph() *Graph {
 	return g
 }
 
-func (g *Graph) AddOrPanic(name string, c interface{}) {
+func (g *Graph) Add(name string, c interface{}) {
 	if err := g.n.Add(name, c); err != nil {
 		log.Panicf("Coult not add: %s", err)
 	}
 }
 
-func (g *Graph) ConnectOrPanic(senderName, senderPort, receiverName, receiverPort string) {
+func (g *Graph) Connect(senderName, senderPort, receiverName, receiverPort string) {
 	if err := g.n.Connect(senderName, senderPort, receiverName, receiverPort); err != nil {
 		log.Panicf("Could not connect: %s", err)
 	}
